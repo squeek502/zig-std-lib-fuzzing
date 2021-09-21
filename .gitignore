@@ -1,0 +1,4 @@
+outputs/
+tmp/
+zig-cache/
+zig-out/
