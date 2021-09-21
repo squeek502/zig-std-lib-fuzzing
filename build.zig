@@ -32,7 +32,7 @@ fn addFuzzer(b: *std.build.Builder, comptime name: []const u8) !void {
     fuzz_compile_run.dependOn(&fuzz_install.step);
 
     // Compile a companion exe for debugging crashes
-    const fuzz_debug_exe = b.addExecutable("fuzz-" ++ name ++ "-debug", "fuzzers/fmt.zig");
+    const fuzz_debug_exe = b.addExecutable("fuzz-" ++ name ++ "-debug", "fuzzers/" ++ name ++ ".zig");
     fuzz_debug_exe.setBuildMode(.Debug);
 
     // Only install fuzz-debug when the fuzz step is run
