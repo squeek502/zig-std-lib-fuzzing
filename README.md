@@ -53,3 +53,8 @@ Or valgrind:
 ```
 valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/main-pop-os/crashes/id:000000,sig:06,src:000908+000906,time:117053,op:splice,rep:16'
 ```
+
+## Bugs found / fixed
+
+- https://github.com/ziglang/zig/pull/9808
+- https://github.com/ziglang/zig/pull/9809
