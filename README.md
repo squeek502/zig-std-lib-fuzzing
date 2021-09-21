@@ -31,7 +31,7 @@ See [AFL++'s 'fuzzing the target' section](https://github.com/AFLplusplus/AFLplu
 If a crash is found during fuzzing, the companion `fuzz-<fuzzer name>-debug` executable can be used to debug the crash. For example, for the `tokenizer` fuzzer, a stack trace could be gotten with:
 
 ```sh
-$ ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/main-pop-os/crashes/id:000000,sig:06,src:000908+000906,time:117053,op:splice,rep:16'
+$ ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes/id:000000,sig:06,src:000908+000906,time:117053,op:splice,rep:16'
 thread 2730086 panic: index out of bounds
 /home/ryan/Programming/zig/zig/build/lib/zig/std/zig/tokenizer.zig:408:34: 0x215131 in std.zig.tokenizer.Tokenizer.next (fuzz-tokenizer-debug)
             const c = self.buffer[self.index];
@@ -45,13 +45,13 @@ thread 2730086 panic: index out of bounds
 Alternatively, the crash can be debugged via gdb:
 
 ```
-gdb -ex 'set args < outputs/tokenizer/main-pop-os/crashes/id:000000,sig:06,src:000908+000906,time:117053,op:splice,rep:16' ./zig-out/bin/fuzz-tokenizer-debug
+gdb -ex 'set args < outputs/tokenizer/default/crashes/id:000000,sig:06,src:000908+000906,time:117053,op:splice,rep:16' ./zig-out/bin/fuzz-tokenizer-debug
 ```
 
 Or valgrind:
 
 ```
-valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/main-pop-os/crashes/id:000000,sig:06,src:000908+000906,time:117053,op:splice,rep:16'
+valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes/id:000000,sig:06,src:000908+000906,time:117053,op:splice,rep:16'
 ```
 
 ## Bugs found / fixed
