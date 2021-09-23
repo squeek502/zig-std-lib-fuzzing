@@ -6,6 +6,7 @@ A set of fuzzers for fuzzing various parts of the [Zig](https://ziglang.org/) st
 Current fuzzers:
 - `tokenizer` which calls `std.zig.Tokenizer.next` until it gets an `eof` token
 - `parse` which calls `std.zig.parse` and then `std.zig.Ast.render`
+- `deflate` which calls `std.compress.deflate.inflateStream().reader().readAllAlloc()`
 - `json` which calls `std.json.Parser.parse`
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.

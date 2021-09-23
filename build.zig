@@ -4,6 +4,7 @@ pub fn build(b: *std.build.Builder) !void {
     try addFuzzer(b, "json");
     try addFuzzer(b, "tokenizer");
     try addFuzzer(b, "parse");
+    try addFuzzer(b, "deflate");
 }
 
 fn addFuzzer(b: *std.build.Builder, comptime name: []const u8) !void {
