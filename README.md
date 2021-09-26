@@ -7,6 +7,7 @@ Current fuzzers:
 - `tokenizer` which calls `std.zig.Tokenizer.next` until it gets an `eof` token
 - `parse` which calls `std.zig.parse` and then `std.zig.Ast.render`
 - `deflate` which calls `std.compress.deflate.inflateStream().reader().readAllAlloc()`
+- `deflate-puff` which compares the results of `puff.c` to Zig's `std.compress.deflate`
 - `json` which calls `std.json.Parser.parse`
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.

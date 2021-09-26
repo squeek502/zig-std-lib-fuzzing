@@ -1,13 +1,20 @@
 const std = @import("std");
 
 pub fn build(b: *std.build.Builder) !void {
-    try addFuzzer(b, "json");
-    try addFuzzer(b, "tokenizer");
-    try addFuzzer(b, "parse");
-    try addFuzzer(b, "deflate");
+    _ = try addFuzzer(b, "json");
+    _ = try addFuzzer(b, "tokenizer");
+    _ = try addFuzzer(b, "parse");
+    _ = try addFuzzer(b, "deflate");
+
+    const deflate_puff = try addFuzzer(b, "deflate-puff");
+    for (deflate_puff.libExes()) |lib_exe| {
+        lib_exe.addIncludeDir("lib/puff");
+        lib_exe.addCSourceFile("lib/puff/puff.c", &.{});
+        lib_exe.linkLibC();
+    }
 }
 
-fn addFuzzer(b: *std.build.Builder, comptime name: []const u8) !void {
+fn addFuzzer(b: *std.build.Builder, comptime name: []const u8) !FuzzerSteps {
     // The library
     const fuzz_lib = b.addStaticLibrary("fuzz-" ++ name ++ "-lib", "fuzzers/" ++ name ++ ".zig");
     fuzz_lib.setBuildMode(.Debug);
@@ -38,4 +45,18 @@ fn addFuzzer(b: *std.build.Builder, comptime name: []const u8) !void {
     // Only install fuzz-debug when the fuzz step is run
     const install_fuzz_debug_exe = b.addInstallArtifact(fuzz_debug_exe);
     fuzz_compile_run.dependOn(&install_fuzz_debug_exe.step);
+
+    return FuzzerSteps{
+        .lib = fuzz_lib,
+        .debug_exe = fuzz_debug_exe,
+    };
 }
+
+const FuzzerSteps = struct {
+    lib: *std.build.LibExeObjStep,
+    debug_exe: *std.build.LibExeObjStep,
+
+    pub fn libExes(self: *const FuzzerSteps) [2]*std.build.LibExeObjStep {
+        return [_]*std.build.LibExeObjStep{ self.lib, self.debug_exe };
+    }
+};
