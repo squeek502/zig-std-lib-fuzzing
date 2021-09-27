@@ -38,7 +38,7 @@ fn translatePuffError(code: c_int) anyerror {
         -7 => error.InvalidLiteralOrLengthCodeLengths,
         -8 => error.InvalidDistanceCodeLengths,
         -9 => error.MissingEOBCode,
-        -10 => error.InvalidFixedCode,
+        -10 => error.InvalidLiteralOrLengthOrDistanceCodeInBlock,
         -11 => error.DistanceTooFarBackInBlock,
         else => unreachable,
     };
