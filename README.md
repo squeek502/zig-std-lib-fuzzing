@@ -58,5 +58,13 @@ valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes
 
 ## Bugs found / fixed
 
+### `std.zig.Tokenizer`
+
 - https://github.com/ziglang/zig/pull/9808
 - https://github.com/ziglang/zig/pull/9809
+
+### `std.compress.deflate`
+
+- https://github.com/ziglang/zig/pull/9849
+- https://github.com/ziglang/zig/pull/9860
+- https://github.com/ziglang/zig/pull/9880
