@@ -44,6 +44,38 @@ fn translatePuffError(code: c_int) anyerror {
     };
 }
 
+fn compareErrors(puff: anyerror, zig: anyerror) !void {
+    const expected_error = switch (puff) {
+        error.EndOfStream => error.EndOfStream,
+        error.OutputSpaceExhausted => error.OutOfMemory,
+        error.NoError => error.NoError,
+        error.InvalidBlockType => error.InvalidBlockType,
+        error.StoredBlockLengthNotOnesComplement => error.InvalidStoredSize,
+        error.TooManyLengthOrDistanceCodes => error.BadCounts,
+        error.CodeLengthsCodesIncomplete => error.InvalidTree,
+        error.RepeatLengthsWithNoFirstLengths => error.NoLastLength,
+        error.RepeatMoreThanSpecifiedLengths => error.InvalidLength,
+        error.InvalidLiteralOrLengthCodeLengths => error.InvalidTree,
+        error.InvalidDistanceCodeLengths => error.InvalidTree,
+        error.MissingEOBCode => error.MissingEOBCode,
+        error.InvalidLiteralOrLengthOrDistanceCodeInBlock => error.OutOfCodes,
+        error.DistanceTooFarBackInBlock => error.InvalidDistance,
+        else => unreachable,
+    };
+
+    if (puff == error.InvalidLiteralOrLengthOrDistanceCodeInBlock) {
+        // puff combines InvalidFixedCode and OutOfCodes into one, so check for either
+        std.debug.assert(zig == error.InvalidFixedCode or zig == expected_error);
+    } else if (puff == error.EndOfStream) {
+        // Zig's implementation returns OutOfCodes early in instances where puff gives
+        // EndOfStream, so check for either
+        std.debug.assert(zig == error.OutOfCodes or zig == expected_error);
+    } else {
+        // otherwise we can check for exact matches
+        try std.testing.expectEqual(@as(anyerror, expected_error), zig);
+    }
+}
+
 pub fn zigMain() !void {
     // Setup an allocator that will detect leaks/use-after-free/etc
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -80,9 +112,10 @@ pub fn zigMain() !void {
     };
 
     if (inflated_puff == null or inflated == null) {
-        std.debug.print("puff error: {}, zig error: {}\n", .{ puff_error, zig_error });
-        std.debug.assert(inflated_puff == null); // inflated is null but inflated_puff isnt
-        std.debug.assert(inflated == null); // inflated_puff is null but inflated isnt
+        compareErrors(puff_error, zig_error) catch |err| {
+            std.debug.print("puff error: {}, zig error: {}\n", .{ puff_error, zig_error });
+            return err;
+        };
     } else {
         try std.testing.expectEqualSlices(u8, inflated_puff.?, inflated.?);
     }
