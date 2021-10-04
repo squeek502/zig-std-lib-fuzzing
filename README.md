@@ -56,6 +56,8 @@ Or valgrind:
 valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes/id:000000,sig:06,src:000908+000906,time:117053,op:splice,rep:16'
 ```
 
+[`zigescape`](https://github.com/squeek502/zigescape) can also be used to convert inputs into string literals for the creation of test cases (preferrably after using `afl-tmin` to minimize the input).
+
 ## Bugs found / fixed
 
 ### `std.zig.Tokenizer`
