@@ -17,6 +17,15 @@ pub fn build(b: *std.build.Builder) !void {
     for (sin.libExes()) |lib_exe| {
         lib_exe.linkLibC();
     }
+
+    // tools
+    const sin_musl = b.addExecutable("sin-musl", "tools/sin-musl.zig");
+    sin_musl.setTarget(.{ .abi = .musl });
+    sin_musl.linkLibC();
+    const install_sin_musl = b.addInstallArtifact(sin_musl);
+
+    const tools_step = b.step("tools", "Build and install tools");
+    tools_step.dependOn(&install_sin_musl.step);
 }
 
 fn addFuzzer(b: *std.build.Builder, comptime name: []const u8, afl_clang_args: []const []const u8) !FuzzerSteps {
