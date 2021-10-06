@@ -9,6 +9,7 @@ Current fuzzers:
 - `deflate` which calls `std.compress.deflate.inflateStream().reader().readAllAlloc()`
 - `deflate-puff` which compares the results of `puff.c` to Zig's `std.compress.deflate`
 - `json` which calls `std.json.Parser.parse`
+- `sin` which calls `std.math.sin` and compares the result to libc's `sin`/`sinf`
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 

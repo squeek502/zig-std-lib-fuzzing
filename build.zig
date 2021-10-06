@@ -1,20 +1,25 @@
 const std = @import("std");
 
 pub fn build(b: *std.build.Builder) !void {
-    _ = try addFuzzer(b, "json");
-    _ = try addFuzzer(b, "tokenizer");
-    _ = try addFuzzer(b, "parse");
-    _ = try addFuzzer(b, "deflate");
+    _ = try addFuzzer(b, "json", &.{});
+    _ = try addFuzzer(b, "tokenizer", &.{});
+    _ = try addFuzzer(b, "parse", &.{});
+    _ = try addFuzzer(b, "deflate", &.{});
 
-    const deflate_puff = try addFuzzer(b, "deflate-puff");
+    const deflate_puff = try addFuzzer(b, "deflate-puff", &.{});
     for (deflate_puff.libExes()) |lib_exe| {
         lib_exe.addIncludeDir("lib/puff");
         lib_exe.addCSourceFile("lib/puff/puff.c", &.{});
         lib_exe.linkLibC();
     }
+
+    const sin = try addFuzzer(b, "sin", &.{"-lm"});
+    for (sin.libExes()) |lib_exe| {
+        lib_exe.linkLibC();
+    }
 }
 
-fn addFuzzer(b: *std.build.Builder, comptime name: []const u8) !FuzzerSteps {
+fn addFuzzer(b: *std.build.Builder, comptime name: []const u8, afl_clang_args: []const []const u8) !FuzzerSteps {
     // The library
     const fuzz_lib = b.addStaticLibrary("fuzz-" ++ name ++ "-lib", "fuzzers/" ++ name ++ ".zig");
     fuzz_lib.setBuildMode(.Debug);
@@ -29,6 +34,8 @@ fn addFuzzer(b: *std.build.Builder, comptime name: []const u8) !FuzzerSteps {
     const fuzz_compile = b.addSystemCommand(&.{ "afl-clang-lto", "-o", fuzz_exe_path });
     // Add the path to the library file to afl-clang-lto's args
     fuzz_compile.addArtifactArg(fuzz_lib);
+    // Custom args
+    fuzz_compile.addArgs(afl_clang_args);
 
     // Install the cached output to the install 'bin' path
     const fuzz_install = b.addInstallBinFile(.{ .path = fuzz_exe_path }, fuzz_executable_name);
