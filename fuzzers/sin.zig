@@ -11,6 +11,8 @@ pub fn zigMain() !void {
     const stdin = std.io.getStdIn();
     _ = try stdin.read(buf[0..]);
 
+    const epsilon = 0.0000001;
+
     // f32
     const float32 = @ptrCast(*const f32, buf[0..@sizeOf(f32)]).*;
     std.debug.print("in : {b:0>32}\n", .{@bitCast(u32, float32)});
@@ -19,7 +21,7 @@ pub fn zigMain() !void {
     if (std.math.isNan(c32)) {
         try std.testing.expect(std.math.isNan(zig32));
     } else {
-        std.testing.expectEqual(c32, zig32) catch |err| {
+        std.testing.expectApproxEqAbs(c32, zig32, epsilon) catch |err| {
             std.debug.print("zig: {b:0>32}\nc  : {b:0>32}\n", .{
                 @bitCast(u32, zig32),
                 @bitCast(u32, c32),
@@ -36,7 +38,7 @@ pub fn zigMain() !void {
     if (std.math.isNan(c64)) {
         try std.testing.expect(std.math.isNan(zig64));
     } else {
-        std.testing.expectEqual(c64, zig64) catch |err| {
+        std.testing.expectApproxEqAbs(c64, zig64, epsilon) catch |err| {
             std.debug.print("zig: {b:0>64}\nc  : {b:0>64}\n", .{
                 @bitCast(u64, zig64),
                 @bitCast(u64, c64),
