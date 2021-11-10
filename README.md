@@ -71,3 +71,7 @@ valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes
 - https://github.com/ziglang/zig/pull/9849
 - https://github.com/ziglang/zig/pull/9860
 - https://github.com/ziglang/zig/pull/9880
+
+### `std.math`
+
+- `sin`: https://github.com/ziglang/zig/issues/9901
