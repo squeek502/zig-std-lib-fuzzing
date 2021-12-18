@@ -6,7 +6,7 @@ pub export fn main() void {
     zigMain() catch unreachable;
 }
 
-fn puffAlloc(allocator: *Allocator, input: []const u8) ![]u8 {
+fn puffAlloc(allocator: Allocator, input: []const u8) ![]u8 {
     // call once to get the uncompressed length
     var decoded_len: c_ulong = undefined;
     var source_len: c_ulong = input.len;
@@ -81,7 +81,7 @@ pub fn zigMain() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     // this will check for leaks and crash the program if it finds any
     defer std.debug.assert(gpa.deinit() == false);
-    const allocator = &gpa.allocator;
+    const allocator = gpa.allocator();
 
     // Read the data from stdin
     const stdin = std.io.getStdIn();
