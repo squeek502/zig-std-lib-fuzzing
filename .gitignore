@@ -1,4 +1,5 @@
 outputs/
+minimized/
 tmp/
 zig-cache/
 zig-out/

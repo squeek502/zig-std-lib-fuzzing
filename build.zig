@@ -13,6 +13,14 @@ pub fn build(b: *std.build.Builder) !void {
         lib_exe.linkLibC();
     }
 
+    _ = try addFuzzer(b, "deflate-new", &.{});
+    const deflate_new_puff = try addFuzzer(b, "deflate-new-puff", &.{});
+    for (deflate_new_puff.libExes()) |lib_exe| {
+        lib_exe.addIncludeDir("lib/puff");
+        lib_exe.addCSourceFile("lib/puff/puff.c", &.{});
+        lib_exe.linkLibC();
+    }
+
     const sin = try addFuzzer(b, "sin", &.{"-lm"});
     for (sin.libExes()) |lib_exe| {
         lib_exe.linkLibC();
