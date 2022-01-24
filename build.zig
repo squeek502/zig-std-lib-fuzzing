@@ -14,6 +14,7 @@ pub fn build(b: *std.build.Builder) !void {
     }
 
     _ = try addFuzzer(b, "deflate-new", &.{});
+    _ = try addFuzzer(b, "deflate-new-roundtrip", &.{});
     const deflate_new_puff = try addFuzzer(b, "deflate-new-puff", &.{});
     for (deflate_new_puff.libExes()) |lib_exe| {
         lib_exe.addIncludeDir("lib/puff");
