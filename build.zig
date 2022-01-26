@@ -5,18 +5,10 @@ pub fn build(b: *std.build.Builder) !void {
     _ = try addFuzzer(b, "tokenizer", &.{});
     _ = try addFuzzer(b, "parse", &.{});
     _ = try addFuzzer(b, "deflate", &.{});
+    _ = try addFuzzer(b, "deflate-roundtrip", &.{});
 
     const deflate_puff = try addFuzzer(b, "deflate-puff", &.{});
     for (deflate_puff.libExes()) |lib_exe| {
-        lib_exe.addIncludeDir("lib/puff");
-        lib_exe.addCSourceFile("lib/puff/puff.c", &.{});
-        lib_exe.linkLibC();
-    }
-
-    _ = try addFuzzer(b, "deflate-new", &.{});
-    _ = try addFuzzer(b, "deflate-new-roundtrip", &.{});
-    const deflate_new_puff = try addFuzzer(b, "deflate-new-puff", &.{});
-    for (deflate_new_puff.libExes()) |lib_exe| {
         lib_exe.addIncludeDir("lib/puff");
         lib_exe.addCSourceFile("lib/puff/puff.c", &.{});
         lib_exe.linkLibC();

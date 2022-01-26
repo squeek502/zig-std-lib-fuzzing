@@ -22,8 +22,8 @@ pub fn main() !void {
 
     // Try to parse the data
     const reader = std.io.fixedBufferStream(data).reader();
-    var window: [0x8000]u8 = undefined;
-    var inflate = std.compress.deflate.inflateStream(reader, &window);
+    var inflate = try std.compress.deflate.decompressor(allocator, reader, null);
+    defer inflate.deinit();
 
     var inflated = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch {
         return;

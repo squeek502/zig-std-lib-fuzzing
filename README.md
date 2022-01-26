@@ -6,8 +6,9 @@ A set of fuzzers for fuzzing various parts of the [Zig](https://ziglang.org/) st
 Current fuzzers:
 - `tokenizer` which calls `std.zig.Tokenizer.next` until it gets an `eof` token
 - `parse` which calls `std.zig.parse` and then `std.zig.Ast.render`
-- `deflate` which calls `std.compress.deflate.inflateStream().reader().readAllAlloc()`
-- `deflate-puff` which compares the results of `puff.c` to Zig's `std.compress.deflate`
+- `deflate` which calls `std.compress.deflate.decompressor().reader().readAllAlloc()`
+- `deflate-puff` which compares the results of `puff.c` to Zig's `std.compress.deflate.decompressor`
+- `deflate-roundtrip` which sends the input through `compressor`, then through `decompressor`, and then checks that the output is the same as the input
 - `json` which calls `std.json.Parser.parse`
 - `sin` which calls `std.math.sin` and compares the result to libc's `sin`/`sinf`
 
@@ -66,7 +67,11 @@ valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes
 - https://github.com/ziglang/zig/pull/9808
 - https://github.com/ziglang/zig/pull/9809
 
-### `std.compress.deflate`
+### `std.compress.deflate` (latest version)
+
+- https://github.com/ziglang/zig/pull/10552#issuecomment-1019194395
+
+### `std.compress.deflate` (older version)
 
 - https://github.com/ziglang/zig/pull/9849
 - https://github.com/ziglang/zig/pull/9860
