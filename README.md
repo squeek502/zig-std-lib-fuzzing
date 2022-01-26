@@ -28,7 +28,7 @@ afl-fuzz -i inputs/tokenizer -o outputs/tokenizer -x dictionaries/zig.dict -- ./
 
 (the `-x` option is not necessary but using a dictionary is recommended if possible)
 
-See [AFL++'s 'fuzzing the target' section](https://github.com/AFLplusplus/AFLplusplus#3-fuzzing-the-target) for more recommendations to improve fuzzing effectiveness (using multiple cores, etc).
+See [AFL++'s 'fuzzing the target' section](https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/fuzzing_in_depth.md#3-fuzzing-the-target) for more recommendations to improve fuzzing effectiveness (using multiple cores, etc).
 
 ## Debugging crashes
 
