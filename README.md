@@ -11,6 +11,8 @@ Current fuzzers:
 - `deflate-roundtrip` which sends the input through `compressor`, then through `decompressor`, and then checks that the output is the same as the input
 - `json` which calls `std.json.Parser.parse`
 - `sin` which calls `std.math.sin` and compares the result to libc's `sin`/`sinf`
+- `xz` which calls `std.compress.xz.decompress`
+- `xxhash` which compares the results of `xxhash.c` to Zig's `std.hash.xxhash` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 
@@ -80,3 +82,7 @@ valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes
 ### `std.math`
 
 - `sin`: https://github.com/ziglang/zig/issues/9901
+
+### `std.compress.xz`
+
+- https://github.com/ziglang/zig/issues/14500

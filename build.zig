@@ -20,6 +20,13 @@ pub fn build(b: *std.build.Builder) !void {
         lib_exe.linkLibC();
     }
 
+    const xxhash = try addFuzzer(b, "xxhash", &.{});
+    for (xxhash.libExes()) |lib_exe| {
+        lib_exe.addIncludePath("lib/xxhash");
+        lib_exe.addCSourceFile("lib/xxhash/xxhash.c", &.{"-DXXH_NO_XXH3"});
+        lib_exe.linkLibC();
+    }
+
     // tools
     const sin_musl = b.addExecutable("sin-musl", "tools/sin-musl.zig");
     sin_musl.setTarget(.{ .abi = .musl });
