@@ -35,9 +35,7 @@ pub fn main() !void {
     var inflate = try std.compress.deflate.decompressor(allocator, reader, null);
     defer inflate.deinit();
 
-    var inflated = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch {
-        return;
-    };
+    var inflated = try inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(inflated);
 
     try std.testing.expectEqualSlices(u8, data, inflated);
