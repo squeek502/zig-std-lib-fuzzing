@@ -66,7 +66,8 @@ pub fn zigMain() !void {
         allocator.free(inflated_puff.?);
     };
 
-    const reader = std.io.fixedBufferStream(data).reader();
+    var fbs = std.io.fixedBufferStream(data);
+    var reader = fbs.reader();
     var inflate = try std.compress.deflate.decompressor(allocator, reader, null);
     defer inflate.deinit();
 

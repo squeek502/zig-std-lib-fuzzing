@@ -9,7 +9,7 @@ pub fn build(b: *std.build.Builder) !void {
 
     const deflate_puff = try addFuzzer(b, "deflate-puff", &.{});
     for (deflate_puff.libExes()) |lib_exe| {
-        lib_exe.addIncludeDir("lib/puff");
+        lib_exe.addIncludePath("lib/puff");
         lib_exe.addCSourceFile("lib/puff/puff.c", &.{});
         lib_exe.linkLibC();
     }
@@ -35,6 +35,8 @@ fn addFuzzer(b: *std.build.Builder, comptime name: []const u8, afl_clang_args: [
     fuzz_lib.setBuildMode(.Debug);
     fuzz_lib.want_lto = true;
     fuzz_lib.bundle_compiler_rt = true;
+    // Seems to be necessary for LLVM >= 15
+    fuzz_lib.force_pic = true;
 
     // Setup the output name
     const fuzz_executable_name = "fuzz-" ++ name;

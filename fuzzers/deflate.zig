@@ -21,7 +21,8 @@ pub fn main() !void {
     defer allocator.free(data);
 
     // Try to parse the data
-    const reader = std.io.fixedBufferStream(data).reader();
+    var fbs = std.io.fixedBufferStream(data);
+    var reader = fbs.reader();
     var inflate = try std.compress.deflate.decompressor(allocator, reader, null);
     defer inflate.deinit();
 

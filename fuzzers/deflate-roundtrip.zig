@@ -31,7 +31,8 @@ pub fn main() !void {
     comp.deinit();
 
     // Now try to decompress it
-    const reader = std.io.fixedBufferStream(buf.items).reader();
+    var fbs = std.io.fixedBufferStream(buf.items);
+    var reader = fbs.reader();
     var inflate = try std.compress.deflate.decompressor(allocator, reader, null);
     defer inflate.deinit();
 
