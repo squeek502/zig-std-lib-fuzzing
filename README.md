@@ -13,6 +13,7 @@ Current fuzzers:
 - `sin` which calls `std.math.sin` and compares the result to libc's `sin`/`sinf`
 - `xz` which calls `std.compress.xz.decompress`
 - `xxhash` which compares the results of `xxhash.c` to Zig's `std.hash.xxhash` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
+- `zstandard` which calls `std.compress.zstandard.decompress.decodeZStandardFrameAlloc` (requires code from https://github.com/ziglang/zig/pull/14394)
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 
