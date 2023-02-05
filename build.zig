@@ -48,8 +48,11 @@ pub fn build(b: *std.build.Builder) !void {
             &.{
                 "-DZSTD_DISABLE_ASM=1",
                 "-DDEBUGLEVEL=10", // Enable debug logging for easier debugging
-                "-DNO_PREFETCH=1", // Attempt to avoid unknown instruction (didn't seem to work though)
-                "-DZSTD_NO_INTRINSICS=1", // Attempt to avoid unknown instruction (didn't seem to work though)
+                // Some inputs trigger UBSAN but I can't reproduce the UB outside of the zig-built .exe.
+                // TODO: Investigate this more, just shutting off UBSAN is a cop-out.
+                "-fno-sanitize=undefined",
+                //"-DNO_PREFETCH=1", // Attempt to avoid unknown instruction (didn't seem to work though)
+                //"-DZSTD_NO_INTRINSICS=1", // Attempt to avoid unknown instruction (didn't seem to work though)
             },
         );
         lib_exe.linkLibC();
