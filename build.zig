@@ -28,6 +28,33 @@ pub fn build(b: *std.build.Builder) !void {
         lib_exe.linkLibC();
     }
 
+    const zstandard_compare = try addFuzzer(b, "zstandard-compare", &.{});
+    for (zstandard_compare.libExes()) |lib_exe| {
+        lib_exe.addIncludePath("lib/zstd/lib");
+        lib_exe.addCSourceFiles(
+            &.{
+                "lib/zstd/lib/decompress/huf_decompress.c",
+                "lib/zstd/lib/decompress/zstd_ddict.c",
+                "lib/zstd/lib/decompress/zstd_decompress.c",
+                "lib/zstd/lib/decompress/zstd_decompress_block.c",
+                "lib/zstd/lib/common/entropy_common.c",
+                "lib/zstd/lib/common/error_private.c",
+                "lib/zstd/lib/common/fse_decompress.c",
+                "lib/zstd/lib/common/pool.c",
+                "lib/zstd/lib/common/xxhash.c",
+                "lib/zstd/lib/common/zstd_common.c",
+                "lib/zstd/lib/common/debug.c",
+            },
+            &.{
+                "-DZSTD_DISABLE_ASM=1",
+                "-DDEBUGLEVEL=10", // Enable debug logging for easier debugging
+                "-DNO_PREFETCH=1", // Attempt to avoid unknown instruction (didn't seem to work though)
+                "-DZSTD_NO_INTRINSICS=1", // Attempt to avoid unknown instruction (didn't seem to work though)
+            },
+        );
+        lib_exe.linkLibC();
+    }
+
     // tools
     const sin_musl = b.addExecutable("sin-musl", "tools/sin-musl.zig");
     sin_musl.setTarget(.{ .abi = .musl });

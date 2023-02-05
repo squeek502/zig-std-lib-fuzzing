@@ -14,6 +14,7 @@ Current fuzzers:
 - `xz` which calls `std.compress.xz.decompress`
 - `xxhash` which compares the results of `xxhash.c` to Zig's `std.hash.xxhash` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
 - `zstandard` which calls `std.compress.zstandard.decompress.decodeZStandardFrameAlloc` (requires code from https://github.com/ziglang/zig/pull/14394)
+- `zstandard-compare` which compares the results of the `zstd` C implementation to Zig's `std.compress.zstandard.decompress.decode` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 
