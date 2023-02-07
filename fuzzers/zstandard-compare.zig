@@ -15,7 +15,20 @@ fn cZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
     if (content_size == ZSTD_CONTENTSIZE_ERROR) return error.ErrorContentSize;
     if (content_size == ZSTD_CONTENTSIZE_UNKNOWN) return error.UnknownContentSize;
 
-    var dest = try allocator.alloc(u8, content_size);
+    // If the content_size is zero, then Zig will return a slice with a ptr value that is maxInt(usize)
+    // which the zstd C implementation chokes on (perhaps a bug in the zstd implementation, it can trip assertions
+    // or cause UBSAN to trigger if e.g. 0xffffffffffffffff is the value of the dest ptr). So, instead
+    // of allocating, we use a zero-length array to give ZSTD_decompress a 'real' pointer even though it's of
+    // length zero so it shouldn't really matter what the ptr value is.
+    //
+    // Note: This is not the case in C because malloc will return a 'real' pointer even if the requested
+    //       size is zero.
+    //
+    // We use a non-zero array size here to ensure that the ptr gets a real value (mostly just to avoid any
+    // other weirdness, this part isn't to mitigate anything in particular but to avoid any potential
+    // problems since in Debug mode &[_]u8{} will have an address of 0xaaaaaaaaaaaaaaaa).
+    var dest_buf: [1]u8 = undefined;
+    var dest: []u8 = if (content_size != 0) try allocator.alloc(u8, content_size) else dest_buf[0..0];
     errdefer allocator.free(dest);
 
     const res = c.ZSTD_decompress(dest.ptr, dest.len, input.ptr, input.len);
