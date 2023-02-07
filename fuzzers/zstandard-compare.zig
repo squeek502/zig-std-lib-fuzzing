@@ -80,6 +80,10 @@ pub fn zigMain() !void {
 
     var actual_error: anyerror = error.NoError;
     const actual_bytes: ?[]u8 = zigZstdAlloc(allocator, data) catch |err| blk: {
+        // Ignore this error since it's an intentional difference from the zstd C implementation
+        if (err == error.DictionaryIdFlagUnsupported) {
+            return;
+        }
         actual_error = err;
         break :blk null;
     };
