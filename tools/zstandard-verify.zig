@@ -49,7 +49,10 @@ pub fn main() !void {
     {
         var buf = try allocator.alloc(u8, uncompressed.len);
         defer allocator.free(buf);
-        const result_len = try std.compress.zstandard.decompress.decode(buf, input, true);
+        const result_len = std.compress.zstandard.decompress.decode(buf, input, true) catch |err| switch (err) {
+            error.UnknownContentSizeUnsupported => return,
+            else => return err,
+        };
 
         try std.testing.expectEqualSlices(u8, uncompressed, buf[0..result_len]);
     }
