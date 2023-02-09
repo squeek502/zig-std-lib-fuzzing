@@ -29,7 +29,7 @@ pub fn main() !void {
     // zstandardStream
     {
         var in_stream = std.io.fixedBufferStream(input);
-        var stream = try std.compress.zstandard.zstandardStream(allocator, in_stream.reader());
+        var stream = std.compress.zstandard.zstandardStream(allocator, in_stream.reader(), 1 << 23);
         defer stream.deinit();
         const result = try stream.reader().readAllAlloc(allocator, std.math.maxInt(usize));
         defer allocator.free(result);
