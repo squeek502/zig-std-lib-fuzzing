@@ -1,6 +1,10 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const c = @cImport(@cInclude("zstd.h"));
+const c = @cImport({
+    // Necessary for ZSTD_decompressBound to be visible
+    @cDefine("ZSTD_STATIC_LINKING_ONLY", "1");
+    @cInclude("zstd.h");
+});
 
 pub export fn main() void {
     zigMain() catch unreachable;
@@ -8,12 +12,12 @@ pub export fn main() void {
 
 // cImported version overflows instead of wraps
 const ZSTD_CONTENTSIZE_ERROR = @as(c_ulonglong, 0) -% @as(c_int, 2);
-const ZSTD_CONTENTSIZE_UNKNOWN = @as(c_ulonglong, 0) -% @as(c_int, 1);
 
 fn cZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
-    const content_size: c_ulonglong = c.ZSTD_getFrameContentSize(input.ptr, input.len);
-    if (content_size == ZSTD_CONTENTSIZE_ERROR) return error.ErrorContentSize;
-    if (content_size == ZSTD_CONTENTSIZE_UNKNOWN) return error.UnknownContentSize;
+    // Note: It might make more sense to compare using the streaming API instead, but this should suffice as it claims
+    // to guarantee a size that will fit the uncompressed data of all frames within `input`
+    const content_size_upper_bound: c_ulonglong = c.ZSTD_decompressBound(input.ptr, input.len);
+    if (content_size_upper_bound == ZSTD_CONTENTSIZE_ERROR) return error.ErrorContentSize;
 
     // If the content_size is zero, then Zig will return a slice with a ptr value that is maxInt(usize)
     // which the zstd C implementation chokes on (perhaps a bug in the zstd implementation, it can trip assertions
@@ -28,7 +32,7 @@ fn cZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
     // other weirdness, this part isn't to mitigate anything in particular but to avoid any potential
     // problems since in Debug mode &[_]u8{} will have an address of 0xaaaaaaaaaaaaaaaa).
     var dest_buf: [1]u8 = undefined;
-    var dest: []u8 = if (content_size != 0) try allocator.alloc(u8, content_size) else dest_buf[0..0];
+    var dest: []u8 = if (content_size_upper_bound != 0) try allocator.alloc(u8, content_size_upper_bound) else dest_buf[0..0];
     errdefer allocator.free(dest);
 
     const res = c.ZSTD_decompress(dest.ptr, dest.len, input.ptr, input.len);
@@ -36,26 +40,6 @@ fn cZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
         std.debug.print("ZSTD ERROR: {s}\n", .{c.ZSTD_getErrorName(res)});
         return error.DecompressError;
     }
-    return dest;
-}
-
-fn zigZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
-    const content_size = blk: {
-        var fbs = std.io.fixedBufferStream(input);
-        var reader = fbs.reader();
-        const frame_type = std.compress.zstandard.decompress.decodeFrameType(reader) catch return error.ErrorContentSize;
-        switch (frame_type) {
-            .zstandard => {},
-            .skippable => break :blk 0,
-        }
-        const header = std.compress.zstandard.decompress.decodeZstandardHeader(reader) catch return error.ErrorContentSize;
-        break :blk header.content_size orelse return error.UnknownContentSize;
-    };
-
-    var dest = try allocator.alloc(u8, content_size);
-    errdefer allocator.free(dest);
-
-    _ = try std.compress.zstandard.decompress.decode(dest, input, true);
     return dest;
 }
 
@@ -79,13 +63,10 @@ pub fn zigMain() !void {
     defer if (expected_bytes != null) allocator.free(expected_bytes.?);
 
     var actual_error: anyerror = error.NoError;
-    const actual_bytes: ?[]u8 = zigZstdAlloc(allocator, data) catch |err| blk: {
+    const window_size_max = 8 * (1 << 20);
+    const actual_bytes: ?[]u8 = std.compress.zstandard.decompress.decodeAlloc(allocator, data, true, window_size_max) catch |err| blk: {
         // Ignore this error since it's an intentional difference from the zstd C implementation
         if (err == error.DictionaryIdFlagUnsupported) {
-            return;
-        }
-        // Intentional difference (at least for now) in this API
-        if (err == error.UnknownContentSizeUnsupported) {
             return;
         }
         // https://github.com/facebook/zstd/issues/3482

@@ -23,15 +23,11 @@ pub fn main() !void {
     const verify_checksum = false;
     // TODO: Vary this? What is a good size to use?
     const window_size_max = 256 * 1024 * 1024; // 256 MiB
-    const result = std.compress.zstandard.decompress.decodeFrameAlloc(
+    const result = std.compress.zstandard.decompress.decodeAlloc(
         allocator,
         data,
         verify_checksum,
         window_size_max,
     ) catch return;
-    
-    switch (result) {
-        .zstandard => |decoded| allocator.free(decoded.bytes),
-        .skippable => {},
-    }
+    defer allocator.free(result);
 }

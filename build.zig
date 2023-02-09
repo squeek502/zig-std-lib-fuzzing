@@ -29,34 +29,11 @@ pub fn build(b: *std.build.Builder) !void {
     }
 
     const zstandard_compare = try addFuzzer(b, "zstandard-compare", &.{});
-    for (zstandard_compare.libExes()) |lib_exe| {
-        lib_exe.addIncludePath("lib/zstd/lib");
-        lib_exe.addCSourceFiles(
-            &.{
-                "lib/zstd/lib/decompress/huf_decompress.c",
-                "lib/zstd/lib/decompress/zstd_ddict.c",
-                "lib/zstd/lib/decompress/zstd_decompress.c",
-                "lib/zstd/lib/decompress/zstd_decompress_block.c",
-                "lib/zstd/lib/common/entropy_common.c",
-                "lib/zstd/lib/common/error_private.c",
-                "lib/zstd/lib/common/fse_decompress.c",
-                "lib/zstd/lib/common/pool.c",
-                "lib/zstd/lib/common/xxhash.c",
-                "lib/zstd/lib/common/zstd_common.c",
-                "lib/zstd/lib/common/debug.c",
-            },
-            &.{
-                "-DZSTD_DISABLE_ASM=1",
-                "-DDEBUGLEVEL=10", // Enable debug logging for easier debugging
-                // Some inputs trigger UBSAN but I can't reproduce the UB outside of the zig-built .exe.
-                // TODO: Investigate this more, just shutting off UBSAN is a cop-out.
-                "-fno-sanitize=undefined",
-                //"-DNO_PREFETCH=1", // Attempt to avoid unknown instruction (didn't seem to work though)
-                //"-DZSTD_NO_INTRINSICS=1", // Attempt to avoid unknown instruction (didn't seem to work though)
-            },
-        );
-        lib_exe.linkLibC();
-    }
+    addZstd(&zstandard_compare);
+    const zstandard_compare_alloc = try addFuzzer(b, "zstandard-compare-alloc", &.{});
+    addZstd(&zstandard_compare_alloc);
+    const zstandard_compare_stream = try addFuzzer(b, "zstandard-compare-stream", &.{});
+    addZstd(&zstandard_compare_stream);
 
     // tools
     const sin_musl = b.addExecutable("sin-musl", "tools/sin-musl.zig");
@@ -122,3 +99,34 @@ const FuzzerSteps = struct {
         return [_]*std.build.LibExeObjStep{ self.lib, self.debug_exe };
     }
 };
+
+fn addZstd(fuzzer_steps: *const FuzzerSteps) void {
+    for (fuzzer_steps.libExes()) |lib_exe| {
+        lib_exe.addIncludePath("lib/zstd/lib");
+        lib_exe.addCSourceFiles(
+            &.{
+                "lib/zstd/lib/decompress/huf_decompress.c",
+                "lib/zstd/lib/decompress/zstd_ddict.c",
+                "lib/zstd/lib/decompress/zstd_decompress.c",
+                "lib/zstd/lib/decompress/zstd_decompress_block.c",
+                "lib/zstd/lib/common/entropy_common.c",
+                "lib/zstd/lib/common/error_private.c",
+                "lib/zstd/lib/common/fse_decompress.c",
+                "lib/zstd/lib/common/pool.c",
+                "lib/zstd/lib/common/xxhash.c",
+                "lib/zstd/lib/common/zstd_common.c",
+                "lib/zstd/lib/common/debug.c",
+            },
+            &.{
+                "-DZSTD_DISABLE_ASM=1",
+                "-DDEBUGLEVEL=10", // Enable debug logging for easier debugging
+                // Some inputs trigger UBSAN but I can't reproduce the UB outside of the zig-built .exe.
+                // TODO: Investigate this more, just shutting off UBSAN is a cop-out.
+                "-fno-sanitize=undefined",
+                //"-DNO_PREFETCH=1", // Attempt to avoid unknown instruction (didn't seem to work though)
+                //"-DZSTD_NO_INTRINSICS=1", // Attempt to avoid unknown instruction (didn't seem to work though)
+            },
+        );
+        lib_exe.linkLibC();
+    }
+}
