@@ -38,19 +38,23 @@ pub fn main() !void {
     }
 
     // decodeAlloc
-    {
-        const result = try std.compress.zstandard.decompress.decodeAlloc(allocator, input, true, 8 * (1 << 20));
+    decodeAlloc: {
+        const result = std.compress.zstandard.decompress.decodeAlloc(allocator, input, true, 8 * (1 << 20)) catch |err| switch (err) {
+            error.DictionaryIdFlagUnsupported => break :decodeAlloc,
+            else => return err,
+        };
         defer allocator.free(result);
 
         try std.testing.expectEqualSlices(u8, uncompressed, result);
     }
 
     // decode
-    {
+    decode: {
         var buf = try allocator.alloc(u8, uncompressed.len);
         defer allocator.free(buf);
         const result_len = std.compress.zstandard.decompress.decode(buf, input, true) catch |err| switch (err) {
-            error.UnknownContentSizeUnsupported => return,
+            error.UnknownContentSizeUnsupported => break :decode,
+            error.DictionaryIdFlagUnsupported => break :decode,
             else => return err,
         };
 
