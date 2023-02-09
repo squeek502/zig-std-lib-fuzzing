@@ -7,7 +7,10 @@ pub fn main() !void {
 
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
-    if (args.len < 2) return error.MissingFilenameArgument;
+    if (args.len < 3) {
+        std.debug.print("Usage: {s} <compressed input> <original/uncompressed input>\n", .{args[0]});
+        return error.MissingCommandLineArguments;
+    }
 
     const input_filename = args[1];
     const input = std.fs.cwd().readFileAlloc(allocator, input_filename, std.math.maxInt(usize)) catch |err| {
