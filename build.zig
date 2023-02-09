@@ -64,8 +64,12 @@ pub fn build(b: *std.build.Builder) !void {
     sin_musl.linkLibC();
     const install_sin_musl = b.addInstallArtifact(sin_musl);
 
+    const zstandard_verify = b.addExecutable("zstandard-verify", "tools/zstandard-verify.zig");
+    const install_zstandard_verify = b.addInstallArtifact(zstandard_verify);
+
     const tools_step = b.step("tools", "Build and install tools");
     tools_step.dependOn(&install_sin_musl.step);
+    tools_step.dependOn(&install_zstandard_verify.step);
 }
 
 fn addFuzzer(b: *std.build.Builder, comptime name: []const u8, afl_clang_args: []const []const u8) !FuzzerSteps {

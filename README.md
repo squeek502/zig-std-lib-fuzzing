@@ -88,3 +88,15 @@ valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes
 ### `std.compress.xz`
 
 - https://github.com/ziglang/zig/issues/14500
+
+---
+
+## Other tools/fuzzers
+
+### `zstandard-verify`
+
+Requires the `decodecorpus` tool from [zstd](https://github.com/facebook/zstd/tree/dev/tests#decodecorpus---tool-to-generate-zstandard-frames-for-decoder-testing) and the `zstandard-verify` tool from this repo (can be built with `zig build tools`). Run the following command to use it to continuously test the `zstandard` Zig decompressor with generated compressed .zst files:
+
+```
+./tools/zstandard-decodecorpus.sh /path/to/decodecorpus ./zig-out/bin/zstandard-verify
+```
