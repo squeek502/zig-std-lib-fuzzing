@@ -84,6 +84,10 @@ pub fn zigMain() !void {
         if (err == error.DictionaryIdFlagUnsupported) {
             return;
         }
+        // https://github.com/facebook/zstd/issues/3482
+        if (err == error.BlockSizeOverMaximum) {
+            return;
+        }
         actual_error = err;
         break :blk null;
     };
