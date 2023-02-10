@@ -27,7 +27,7 @@ fn cZstdStreaming(allocator: Allocator, input: []const u8) ![]u8 {
             std.debug.print("ZSTD ERROR: {s}\n", .{c.ZSTD_getErrorName(res)});
             return error.DecompressError;
         }
-        try result.appendSlice(buf_out[0..res]);
+        try result.appendSlice(buf_out[0..out_buffer.pos]);
         last_ret = res;
     }
 
