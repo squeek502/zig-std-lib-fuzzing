@@ -20,14 +20,27 @@ pub fn main() !void {
     const data = try stdin.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(data);
 
-    const verify_checksum = false;
-    // TODO: Vary this? What is a good size to use?
-    const window_size_max = 256 * 1024 * 1024; // 256 MiB
-    const result = std.compress.zstandard.decompress.decodeAlloc(
-        allocator,
-        data,
-        verify_checksum,
-        window_size_max,
-    ) catch return;
-    defer allocator.free(result);
+    // zstandardStream
+    zstandardStream: {
+        var in_stream = std.io.fixedBufferStream(data);
+        var stream = std.compress.zstandard.zstandardStream(allocator, in_stream.reader(), 1 << 23);
+        defer stream.deinit();
+        const result = stream.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch break :zstandardStream;
+        defer allocator.free(result);
+    }
+
+    // decodeAlloc
+    decodeAlloc: {
+        const result = std.compress.zstandard.decompress.decodeAlloc(allocator, data, false, 1 << 23) catch break :decodeAlloc;
+        defer allocator.free(result);
+    }
+
+    // decode
+    decode: {
+        // Assume the uncompressed size is less than or equal to the compressed size.
+        // The uncompressed data might not always fit, but that's fine for the purposes of this fuzzer
+        var buf = try allocator.alloc(u8, data.len);
+        defer allocator.free(buf);
+        _ = std.compress.zstandard.decompress.decode(buf, data, false) catch break :decode;
+    }
 }
