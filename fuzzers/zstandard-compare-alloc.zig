@@ -40,7 +40,7 @@ fn cZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
         std.debug.print("ZSTD ERROR: {s}\n", .{c.ZSTD_getErrorName(res)});
         return error.DecompressError;
     }
-    return dest;
+    return allocator.realloc(dest, res);
 }
 
 pub fn zigMain() !void {
