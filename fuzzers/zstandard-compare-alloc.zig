@@ -65,14 +65,14 @@ pub fn zigMain() !void {
     var actual_error: anyerror = error.NoError;
     const window_size_max = 8 * (1 << 20);
     const actual_bytes: ?[]u8 = std.compress.zstandard.decompress.decodeAlloc(allocator, data, true, window_size_max) catch |err| blk: {
-        // Ignore this error since it's an intentional difference from the zstd C implementation
-        if (err == error.DictionaryIdFlagUnsupported) {
-            return;
+        switch (err) {
+            // Ignore this error since it's an intentional difference from the zstd C implementation
+            error.DictionaryIdFlagUnsupported => return,
+            error.MalformedFrame, error.OutOfMemory => {},
         }
-        // https://github.com/facebook/zstd/issues/3482
-        if (err == error.BlockSizeOverMaximum) {
-            return;
-        }
+
+        std.debug.dumpStackTrace(@errorReturnTrace().?.*);
+
         actual_error = err;
         break :blk null;
     };

@@ -71,6 +71,7 @@ pub fn zigMain() !void {
 
     var actual_error: anyerror = error.NoError;
     const actual_bytes: ?[]u8 = zigZstdStreaming(allocator, data) catch |err| blk: {
+        std.debug.dumpStackTrace(@errorReturnTrace().?.*);
         actual_error = err;
         break :blk null;
     };

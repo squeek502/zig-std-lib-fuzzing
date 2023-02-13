@@ -80,18 +80,18 @@ pub fn zigMain() !void {
 
     var actual_error: anyerror = error.NoError;
     const actual_bytes: ?[]u8 = zigZstdAlloc(allocator, data) catch |err| blk: {
-        // Ignore this error since it's an intentional difference from the zstd C implementation
-        if (err == error.DictionaryIdFlagUnsupported) {
-            return;
+        switch (err) {
+            // Ignore this error since it's an intentional difference from the zstd C implementation
+            error.DictionaryIdFlagUnsupported => return,
+            // Intentional difference (at least for now) in this API
+            error.UnknownContentSizeUnsupported => return,
+            // errors from reading header to determine buffer size needed
+            error.ErrorContentSize, error.UnknownContentSize => {},
+            error.MalformedFrame, error.OutOfMemory => {},
         }
-        // Intentional difference (at least for now) in this API
-        if (err == error.UnknownContentSizeUnsupported) {
-            return;
-        }
-        // https://github.com/facebook/zstd/issues/3482
-        if (err == error.BlockSizeOverMaximum) {
-            return;
-        }
+
+        std.debug.dumpStackTrace(@errorReturnTrace().?.*);
+
         actual_error = err;
         break :blk null;
     };
@@ -99,7 +99,7 @@ pub fn zigMain() !void {
 
     if (expected_bytes == null or actual_bytes == null) {
         if (expected_bytes != null or actual_bytes != null) {
-            std.debug.print("zstd error: {}, zig error: {}\n", .{ expected_error, actual_error });
+            std.debug.print("\nzstd error: {}, zig error: {}\n", .{ expected_error, actual_error });
             return error.MismatchedErrors;
         }
     } else {
