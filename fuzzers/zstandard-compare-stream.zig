@@ -72,6 +72,14 @@ pub fn zigMain() !void {
     var actual_error: anyerror = error.NoError;
     const actual_bytes: ?[]u8 = zigZstdStreaming(allocator, data) catch |err| blk: {
         std.debug.dumpStackTrace(@errorReturnTrace().?.*);
+        switch (err) {
+            // Ignore this error since it's an intentional difference from the zstd C implementation
+            error.DictionaryIdFlagUnsupported => return,
+            error.MalformedFrame, error.MalformedBlock, error.OutOfMemory, error.ChecksumFailure => {},
+            // Only possible when max_size is exceeded during Reader.readAllAlloc, which we set as maxInt(usize)
+            error.StreamTooLong => unreachable,
+        }
+
         actual_error = err;
         break :blk null;
     };
