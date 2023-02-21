@@ -91,6 +91,19 @@ valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes
 
 - https://github.com/ziglang/zig/issues/14500
 
+### `std.compress.zstandard`
+
+- https://github.com/ziglang/zig/pull/14394 (a whole bunch of stuff during the PR process)
+
+### In upstream/third-party projects
+
+#### [`facebook/zstd`](https://github.com/facebook/zstd)
+
+- https://github.com/facebook/zstd/issues/3506
+- https://github.com/facebook/zstd/issues/3507
+- https://github.com/facebook/zstd/issues/3508
+- https://github.com/facebook/zstd/issues/3482
+
 ---
 
 ## Other tools/fuzzers

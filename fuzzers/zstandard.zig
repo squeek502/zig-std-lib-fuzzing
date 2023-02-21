@@ -20,12 +20,12 @@ pub fn main() !void {
     const data = try stdin.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(data);
 
-    // zstandardStream
-    zstandardStream: {
+    // decompressStream
+    decompressStream: {
         var in_stream = std.io.fixedBufferStream(data);
-        var stream = std.compress.zstandard.zstandardStream(allocator, in_stream.reader(), 1 << 23);
+        var stream = std.compress.zstandard.decompressStream(allocator, in_stream.reader());
         defer stream.deinit();
-        const result = stream.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch break :zstandardStream;
+        const result = stream.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch break :decompressStream;
         defer allocator.free(result);
     }
 
