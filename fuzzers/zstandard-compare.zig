@@ -43,19 +43,19 @@ fn zigZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
     const content_size = blk: {
         var fbs = std.io.fixedBufferStream(input);
         var reader = fbs.reader();
-        const frame_type = std.compress.zstandard.decompress.decodeFrameType(reader) catch return error.ErrorContentSize;
+        const frame_type = std.compress.zstd.decompress.decodeFrameType(reader) catch return error.ErrorContentSize;
         switch (frame_type) {
             .zstandard => {},
             .skippable => break :blk 0,
         }
-        const header = std.compress.zstandard.decompress.decodeZstandardHeader(reader) catch return error.ErrorContentSize;
+        const header = std.compress.zstd.decompress.decodeZstandardHeader(reader) catch return error.ErrorContentSize;
         break :blk header.content_size orelse return error.UnknownContentSize;
     };
 
     var dest = try allocator.alloc(u8, content_size);
     errdefer allocator.free(dest);
 
-    _ = try std.compress.zstandard.decompress.decode(dest, input, true);
+    _ = try std.compress.zstd.decompress.decode(dest, input, true);
     return dest;
 }
 

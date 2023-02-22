@@ -42,7 +42,7 @@ fn cZstdStreaming(allocator: Allocator, input: []const u8) ![]u8 {
 
 fn zigZstdStreaming(allocator: Allocator, input: []const u8) ![]u8 {
     var in_stream = std.io.fixedBufferStream(input);
-    var stream = std.compress.zstandard.decompressStream(allocator, in_stream.reader());
+    var stream = std.compress.zstd.decompressStream(allocator, in_stream.reader());
     defer stream.deinit();
     const result = try stream.reader().readAllAlloc(allocator, std.math.maxInt(usize));
     errdefer allocator.free(result);

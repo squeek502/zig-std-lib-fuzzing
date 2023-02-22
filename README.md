@@ -13,10 +13,10 @@ Current fuzzers:
 - `sin` which calls `std.math.sin` and compares the result to libc's `sin`/`sinf`
 - `xz` which calls `std.compress.xz.decompress`
 - `xxhash` which compares the results of `xxhash.c` to Zig's `std.hash.xxhash` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
-- `zstandard` which calls `std.compress.zstandard.decompress.decodeAlloc` (requires code from https://github.com/ziglang/zig/pull/14394)
-- `zstandard-compare` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstandard.decompress.decode` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
-- `zstandard-compare-alloc` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstandard.decompress.decodeAlloc` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
-- `zstandard-compare-stream` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstandard.zstandardStream` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
+- `zstandard` which calls the `std.compress.zstd` `decode`, `decodeAlloc`, and `decompressStream` APIs.
+- `zstandard-compare` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompress.decode` implementation
+- `zstandard-compare-alloc` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompress.decodeAlloc` implementation
+- `zstandard-compare-stream` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompressStream` implementation
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 

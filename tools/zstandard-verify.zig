@@ -29,7 +29,7 @@ pub fn main() !void {
     // decompressStream
     {
         var in_stream = std.io.fixedBufferStream(input);
-        var stream = std.compress.zstandard.decompressStream(allocator, in_stream.reader());
+        var stream = std.compress.zstd.decompressStream(allocator, in_stream.reader());
         defer stream.deinit();
         const result = try stream.reader().readAllAlloc(allocator, std.math.maxInt(usize));
         defer allocator.free(result);
@@ -39,7 +39,7 @@ pub fn main() !void {
 
     // decodeAlloc
     decodeAlloc: {
-        const result = std.compress.zstandard.decompress.decodeAlloc(allocator, input, true, 8 * (1 << 20)) catch |err| switch (err) {
+        const result = std.compress.zstd.decompress.decodeAlloc(allocator, input, true, 8 * (1 << 20)) catch |err| switch (err) {
             error.DictionaryIdFlagUnsupported => break :decodeAlloc,
             else => return err,
         };
@@ -52,7 +52,7 @@ pub fn main() !void {
     decode: {
         var buf = try allocator.alloc(u8, uncompressed.len);
         defer allocator.free(buf);
-        const result_len = std.compress.zstandard.decompress.decode(buf, input, true) catch |err| switch (err) {
+        const result_len = std.compress.zstd.decompress.decode(buf, input, true) catch |err| switch (err) {
             error.UnknownContentSizeUnsupported => break :decode,
             error.DictionaryIdFlagUnsupported => break :decode,
             else => return err,

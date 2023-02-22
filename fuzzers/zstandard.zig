@@ -23,7 +23,7 @@ pub fn main() !void {
     // decompressStream
     decompressStream: {
         var in_stream = std.io.fixedBufferStream(data);
-        var stream = std.compress.zstandard.decompressStream(allocator, in_stream.reader());
+        var stream = std.compress.zstd.decompressStream(allocator, in_stream.reader());
         defer stream.deinit();
         const result = stream.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch break :decompressStream;
         defer allocator.free(result);
@@ -31,7 +31,7 @@ pub fn main() !void {
 
     // decodeAlloc
     decodeAlloc: {
-        const result = std.compress.zstandard.decompress.decodeAlloc(allocator, data, false, 1 << 23) catch break :decodeAlloc;
+        const result = std.compress.zstd.decompress.decodeAlloc(allocator, data, false, 1 << 23) catch break :decodeAlloc;
         defer allocator.free(result);
     }
 
@@ -41,6 +41,6 @@ pub fn main() !void {
         // The uncompressed data might not always fit, but that's fine for the purposes of this fuzzer
         var buf = try allocator.alloc(u8, data.len);
         defer allocator.free(buf);
-        _ = std.compress.zstandard.decompress.decode(buf, data, false) catch break :decode;
+        _ = std.compress.zstd.decompress.decode(buf, data, false) catch break :decode;
     }
 }
