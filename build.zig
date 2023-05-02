@@ -8,6 +8,7 @@ pub fn build(b: *std.build.Builder) !void {
     _ = try addFuzzer(b, "deflate-roundtrip", &.{});
     _ = try addFuzzer(b, "xz", &.{});
     _ = try addFuzzer(b, "zstandard", &.{});
+    _ = try addFuzzer(b, "tar", &.{});
 
     const deflate_puff = try addFuzzer(b, "deflate-puff", &.{});
     for (deflate_puff.libExes()) |lib_exe| {

@@ -17,6 +17,7 @@ Current fuzzers:
 - `zstandard-compare` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompress.decode` implementation
 - `zstandard-compare-alloc` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompress.decodeAlloc` implementation
 - `zstandard-compare-stream` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompressStream` implementation
+- `tar` which calls `std.tar.pipeToFileSystem` (requires the code from https://github.com/ziglang/zig/pull/15382)
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 
