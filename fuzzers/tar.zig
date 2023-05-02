@@ -26,10 +26,10 @@ pub fn main() !void {
 
     const rand_int = std.crypto.random.int(u64);
     var tmp_buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;
-    const tmp_dirpath = std.fmt.bufPrint(&tmp_buf, "/tmp/{x}", .{rand_int}) catch unreachable;
-    defer std.fs.cwd().deleteTree(tmp_dirpath) catch {};
+    const tmp_dirpath = std.fmt.bufPrint(&tmp_buf, "/tmp/zig-tar-fuzzing/{x}", .{rand_int}) catch unreachable;
 
     const tmpdir = try std.fs.cwd().makeOpenPath(tmp_dirpath, .{});
+    defer std.fs.cwd().deleteTree(tmp_dirpath) catch {};
 
     std.tar.pipeToFileSystem(allocator, tmpdir, reader, .{}) catch {};
 }
