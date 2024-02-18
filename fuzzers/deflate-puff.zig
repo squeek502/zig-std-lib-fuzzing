@@ -16,7 +16,7 @@ fn puffAlloc(allocator: Allocator, input: []const u8) ![]u8 {
         return translatePuffError(result);
     }
 
-    var dest = try allocator.alloc(u8, decoded_len);
+    const dest = try allocator.alloc(u8, decoded_len);
     errdefer allocator.free(dest);
 
     // call again to actually get the output
@@ -67,12 +67,11 @@ pub fn zigMain() !void {
     };
 
     var fbs = std.io.fixedBufferStream(data);
-    var reader = fbs.reader();
-    var inflate = try std.compress.deflate.decompressor(allocator, reader, null);
-    defer inflate.deinit();
+    const reader = fbs.reader();
+    var inflate = std.compress.flate.decompressor(reader);
 
     var zig_error: anyerror = error.NoError;
-    var inflated: ?[]u8 = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch |err| blk: {
+    const inflated: ?[]u8 = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch |err| blk: {
         zig_error = err;
         break :blk null;
     };

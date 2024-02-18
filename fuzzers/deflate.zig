@@ -22,11 +22,10 @@ pub fn main() !void {
 
     // Try to parse the data
     var fbs = std.io.fixedBufferStream(data);
-    var reader = fbs.reader();
-    var inflate = try std.compress.deflate.decompressor(allocator, reader, null);
-    defer inflate.deinit();
+    const reader = fbs.reader();
+    var inflate = std.compress.flate.decompressor(reader);
 
-    var inflated = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch {
+    const inflated = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch {
         return;
     };
     defer allocator.free(inflated);
