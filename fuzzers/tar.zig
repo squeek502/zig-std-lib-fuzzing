@@ -20,6 +20,9 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace, ret_
     std.builtin.default_panic(msg, error_return_trace, ret_addr);
 }
 
+// Test just parser, without writing to the file system. Faster.
+const no_fs = false;
+
 pub fn main() !void {
     // Setup an allocator that will detect leaks/use-after-free/etc
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -31,19 +34,35 @@ pub fn main() !void {
     const stdin = std.io.getStdIn();
     const data = try stdin.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(data);
-
-    // Try to parse the data
     var fbs = std.io.fixedBufferStream(data);
-    var reader = fbs.reader();
+    const reader = fbs.reader();
 
-    const rand_int = std.crypto.random.int(u64);
-    tmp_dirpath = std.fmt.bufPrint(&tmp_buf, "/tmp/zig-tar-fuzzing/{x}", .{rand_int}) catch unreachable;
+    if (no_fs) {
+        // Run tar parser
+        var tar = std.tar.iterator(reader, null);
+        while (tar.next() catch null) |file| {
+            switch (file.kind) {
+                .directory => {},
+                .normal => {
+                    file.write(std.io.null_writer) catch |err| {
+                        if (err == error.EndOfStream) break;
+                        return err;
+                    };
+                },
+                .symbolic_link => {},
+                else => unreachable,
+            }
+        }
+    } else {
+        // Run tar parser and write untar data to the file system
+        const rand_int = std.crypto.random.int(u64);
+        tmp_dirpath = std.fmt.bufPrint(&tmp_buf, "/tmp/zig-tar-fuzzing/{x}", .{rand_int}) catch unreachable;
 
-    const tmpdir = try std.fs.cwd().makeOpenPath(tmp_dirpath.?, .{});
-    defer std.fs.cwd().deleteTree(tmp_dirpath.?) catch |err| {
-        std.debug.print("failed to deleteTree during defer: {}\n", .{err});
-        @panic("failed to deleteTree in defer");
-    };
-
-    std.tar.pipeToFileSystem(allocator, tmpdir, reader, .{}) catch {};
+        const tmpdir = try std.fs.cwd().makeOpenPath(tmp_dirpath.?, .{});
+        defer std.fs.cwd().deleteTree(tmp_dirpath.?) catch |err| {
+            std.debug.print("failed to deleteTree during defer: {}\n", .{err});
+            @panic("failed to deleteTree in defer");
+        };
+        std.tar.pipeToFileSystem(tmpdir, reader, .{ .mode_mode = .ignore }) catch {};
+    }
 }
