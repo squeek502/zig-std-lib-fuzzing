@@ -15,7 +15,7 @@ fn cZstdStreaming(allocator: Allocator, input: []const u8) ![]u8 {
     var buf_out = try allocator.alloc(u8, buf_out_size);
     defer allocator.free(buf_out);
 
-    var dctx = c.ZSTD_createDCtx();
+    const dctx = c.ZSTD_createDCtx();
     defer _ = c.ZSTD_freeDCtx(dctx);
 
     var in_buffer = c.ZSTD_inBuffer{ .src = input.ptr, .size = input.len, .pos = 0 };

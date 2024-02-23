@@ -21,7 +21,7 @@ pub fn main() !void {
     defer allocator.free(data);
 
     // Try to parse the data
-    var tree = try std.zig.parse(allocator, data);
+    var tree = try std.zig.Ast.parse(allocator, data, .zig);
     defer tree.deinit(allocator);
 
     if (tree.errors.len != 0) {

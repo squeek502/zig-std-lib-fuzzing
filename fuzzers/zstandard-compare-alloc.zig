@@ -32,7 +32,7 @@ fn cZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
     // other weirdness, this part isn't to mitigate anything in particular but to avoid any potential
     // problems since in Debug mode &[_]u8{} will have an address of 0xaaaaaaaaaaaaaaaa).
     var dest_buf: [1]u8 = undefined;
-    var dest: []u8 = if (content_size_upper_bound != 0) try allocator.alloc(u8, content_size_upper_bound) else dest_buf[0..0];
+    const dest: []u8 = if (content_size_upper_bound != 0) try allocator.alloc(u8, content_size_upper_bound) else dest_buf[0..0];
     errdefer allocator.free(dest);
 
     const res = c.ZSTD_decompress(dest.ptr, dest.len, input.ptr, input.len);

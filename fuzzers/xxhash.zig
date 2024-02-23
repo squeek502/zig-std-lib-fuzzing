@@ -20,8 +20,8 @@ pub fn zigMain() !void {
     const expected_hash_32 = c.XXH32(data.ptr, data.len, 0);
     const expected_hash_64 = c.XXH64(data.ptr, data.len, 0);
 
-    const actual_hash_32 = std.hash.XxHash32.hash(data);
-    const actual_hash_64 = std.hash.XxHash64.hash(data);
+    const actual_hash_32 = std.hash.XxHash32.hash(0, data);
+    const actual_hash_64 = std.hash.XxHash64.hash(0, data);
 
     try std.testing.expectEqual(expected_hash_32, actual_hash_32);
     try std.testing.expectEqual(expected_hash_64, actual_hash_64);

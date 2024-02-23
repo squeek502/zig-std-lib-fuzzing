@@ -28,7 +28,7 @@ fn cZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
     // other weirdness, this part isn't to mitigate anything in particular but to avoid any potential
     // problems since in Debug mode &[_]u8{} will have an address of 0xaaaaaaaaaaaaaaaa).
     var dest_buf: [1]u8 = undefined;
-    var dest: []u8 = if (content_size != 0) try allocator.alloc(u8, content_size) else dest_buf[0..0];
+    const dest: []u8 = if (content_size != 0) try allocator.alloc(u8, content_size) else dest_buf[0..0];
     errdefer allocator.free(dest);
 
     const res = c.ZSTD_decompress(dest.ptr, dest.len, input.ptr, input.len);
@@ -42,7 +42,7 @@ fn cZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
 fn zigZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
     const content_size = blk: {
         var fbs = std.io.fixedBufferStream(input);
-        var reader = fbs.reader();
+        const reader = fbs.reader();
         const frame_type = std.compress.zstd.decompress.decodeFrameType(reader) catch return error.ErrorContentSize;
         switch (frame_type) {
             .zstandard => {},
@@ -52,7 +52,7 @@ fn zigZstdAlloc(allocator: Allocator, input: []const u8) ![]u8 {
         break :blk header.content_size orelse return error.UnknownContentSize;
     };
 
-    var dest = try allocator.alloc(u8, content_size);
+    const dest = try allocator.alloc(u8, content_size);
     errdefer allocator.free(dest);
 
     _ = try std.compress.zstd.decompress.decode(dest, input, true);

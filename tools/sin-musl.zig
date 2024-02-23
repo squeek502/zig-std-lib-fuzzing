@@ -11,16 +11,16 @@ pub fn main() !void {
     _ = try stdin.read(buf[0..]);
 
     // f32
-    const float32 = @ptrCast(*const f32, buf[0..@sizeOf(f32)]).*;
+    const float32 = @as(*const f32, @ptrCast(buf[0..@sizeOf(f32)])).*;
     const c32 = c.sinf(float32);
-    std.debug.print("in : {b:0>32}\n", .{@bitCast(u32, float32)});
+    std.debug.print("in : {b:0>32}\n", .{@as(u32, @bitCast(float32))});
     std.debug.print("{}\n", .{c32});
-    std.debug.print("c  : {b:0>32}\n", .{@bitCast(u32, c32)});
+    std.debug.print("c  : {b:0>32}\n", .{@as(u32, @bitCast(c32))});
 
     // f64
-    var float64 = @ptrCast(*const f64, buf[0..]).*;
+    const float64 = @as(*const f64, @ptrCast(buf[0..])).*;
     const c64 = c.sin(float64);
-    std.debug.print("in : {b:0>64}\n", .{@bitCast(u64, float64)});
+    std.debug.print("in : {b:0>64}\n", .{@as(u64, @bitCast(float64))});
     std.debug.print("{}\n", .{c64});
-    std.debug.print("c  : {b:0>64}\n", .{@bitCast(u64, c64)});
+    std.debug.print("c  : {b:0>64}\n", .{@as(u64, @bitCast(c64))});
 }

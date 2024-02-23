@@ -22,7 +22,7 @@ pub fn main() !void {
 
     // Try to parse the data
     var fbs = std.io.fixedBufferStream(data);
-    var reader = fbs.reader();
+    const reader = fbs.reader();
 
     var xz_stream = std.compress.xz.decompress(allocator, reader) catch {
         return;

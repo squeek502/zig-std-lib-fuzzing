@@ -21,11 +21,9 @@ pub fn main() !void {
     defer allocator.free(data);
 
     // Try to parse the data
-    var parser = std.json.Parser.init(allocator, false);
-    defer parser.deinit();
-
-    var tree = parser.parse(data) catch {
+    // TODO: Vary the ParseOptions fields
+    var parsed = std.json.parseFromSlice(std.json.Value, allocator, data, .{}) catch {
         return;
     };
-    defer tree.deinit();
+    defer parsed.deinit();
 }

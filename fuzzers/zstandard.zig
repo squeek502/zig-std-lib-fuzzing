@@ -39,7 +39,7 @@ pub fn main() !void {
     decode: {
         // Assume the uncompressed size is less than or equal to the compressed size.
         // The uncompressed data might not always fit, but that's fine for the purposes of this fuzzer
-        var buf = try allocator.alloc(u8, data.len);
+        const buf = try allocator.alloc(u8, data.len);
         defer allocator.free(buf);
         _ = std.compress.zstd.decompress.decode(buf, data, false) catch break :decode;
     }
