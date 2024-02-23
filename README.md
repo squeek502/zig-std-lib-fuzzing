@@ -5,14 +5,14 @@ A set of fuzzers for fuzzing various parts of the [Zig](https://ziglang.org/) st
 
 Current fuzzers:
 - `tokenizer` which calls `std.zig.Tokenizer.next` until it gets an `eof` token
-- `parse` which calls `std.zig.parse` and then `std.zig.Ast.render`
-- `deflate` which calls `std.compress.deflate.decompressor().reader().readAllAlloc()`
-- `deflate-puff` which compares the results of `puff.c` to Zig's `std.compress.deflate.decompressor`
+- `parse` which calls `std.zig.Ast.parse` and then `std.zig.Ast.render`
+- `deflate` which calls `std.compress.flate.decompressor().reader().readAllAlloc()`
+- `deflate-puff` which compares the results of `puff.c` to Zig's `std.compress.flate.decompressor`
 - `deflate-roundtrip` which sends the input through `compressor`, then through `decompressor`, and then checks that the output is the same as the input
-- `json` which calls `std.json.Parser.parse`
+- `json` which calls `std.json.parseFromSlice`
 - `sin` which calls `std.math.sin` and compares the result to libc's `sin`/`sinf`
 - `xz` which calls `std.compress.xz.decompress`
-- `xxhash` which compares the results of `xxhash.c` to Zig's `std.hash.xxhash` implementation (requires code from https://github.com/ziglang/zig/pull/14394)
+- `xxhash` which compares the results of `xxhash.c` to Zig's `std.hash.xxhash` implementation
 - `zstandard` which calls the `std.compress.zstd` `decode`, `decodeAlloc`, and `decompressStream` APIs.
 - `zstandard-compare` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompress.decode` implementation
 - `zstandard-compare-alloc` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompress.decodeAlloc` implementation
