@@ -75,11 +75,15 @@ valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes
 - https://github.com/ziglang/zig/pull/9808
 - https://github.com/ziglang/zig/pull/9809
 
-### `std.compress.deflate` (latest version)
+### `std.compress.flate` (latest version of Deflate)
+
+- [https://github.com/ianic/flate/issues](https://github.com/ianic/flate/issues?q=is%3Aissue+is%3Aclosed+author%3Asqueek502) (a bunch of stuff before it was [submitted as a PR](https://github.com/ziglang/zig/pull/18923))
+
+### `std.compress.deflate` (second version of Deflate)
 
 - https://github.com/ziglang/zig/pull/10552#issuecomment-1019194395
 
-### `std.compress.deflate` (older version)
+### `std.compress.deflate` (first version of Deflate)
 
 - https://github.com/ziglang/zig/pull/9849
 - https://github.com/ziglang/zig/pull/9860
