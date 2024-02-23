@@ -17,7 +17,8 @@ Current fuzzers:
 - `zstandard-compare` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompress.decode` implementation
 - `zstandard-compare-alloc` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompress.decodeAlloc` implementation
 - `zstandard-compare-stream` which compares the results of the `zstd` reference implementation to Zig's `std.compress.zstd.decompressStream` implementation
-- `tar` which calls `std.tar.pipeToFileSystem` (requires the code from https://github.com/ziglang/zig/pull/15382)
+- `tar` which uses `std.tar.iterator` to simulate an untar operation (but does not write to the filesystem)
+- `tar-fs` which calls `std.tar.pipeToFileSystem` (and actually writes to the filesystem)
 
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 
@@ -95,6 +96,10 @@ valgrind ./zig-out/bin/fuzz-tokenizer-debug < 'outputs/tokenizer/default/crashes
 ### `std.compress.zstandard`
 
 - https://github.com/ziglang/zig/pull/14394 (a whole bunch of stuff during the PR process)
+
+### `std.tar`
+
+- https://github.com/ziglang/zig/pull/19038
 
 ### In upstream/third-party projects
 
