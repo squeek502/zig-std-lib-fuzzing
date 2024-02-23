@@ -20,23 +20,27 @@ pub fn main() !void {
     const data = try stdin.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(data);
 
+    var fbs = std.io.fixedBufferStream(data);
+    const reader = fbs.reader();
+
+    // Choose a pseudo-random level using the hash of the data
+    const hash = std.hash.Wyhash.hash(0, data);
+    const levels = [_]std.compress.flate.deflate.Level{ .level_4, .level_5, .level_6, .level_7, .level_8, .level_9 };
+    const level_index: usize = @intCast(hash % levels.len);
+    const level = levels[level_index];
+    std.debug.print("{}\n", .{level});
+
     // Compress the data
     var buf = std.ArrayList(u8).init(allocator);
     defer buf.deinit();
-
-    // TODO: vary the level?
-    var comp = try std.compress.deflate.compressor(allocator, buf.writer(), .{});
-    _ = try comp.write(data);
-    try comp.close();
-    comp.deinit();
+    try std.compress.flate.compress(reader, buf.writer(), .{ .level = level });
 
     // Now try to decompress it
-    var fbs = std.io.fixedBufferStream(buf.items);
-    var reader = fbs.reader();
-    var inflate = try std.compress.deflate.decompressor(allocator, reader, null);
-    defer inflate.deinit();
-
-    var inflated = try inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize));
+    var buf_fbs = std.io.fixedBufferStream(buf.items);
+    var inflate = std.compress.flate.decompressor(buf_fbs.reader());
+    const inflated = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch {
+        return;
+    };
     defer allocator.free(inflated);
 
     try std.testing.expectEqualSlices(u8, data, inflated);
