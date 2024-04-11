@@ -1,0 +1,38 @@
+--- upstream/git.zig
++++ patched/git.zig
+@@ -1041,7 +1041,7 @@
+ 
+ /// Writes out a version 2 index for the given packfile, as documented in
+ /// [pack-format](https://git-scm.com/docs/pack-format).
+-pub fn indexPack(allocator: Allocator, pack: std.fs.File, index_writer: anytype) !void {
++pub fn indexPack(allocator: Allocator, pack: anytype, index_writer: anytype) !void {
+     try pack.seekTo(0);
+ 
+     var index_entries = std.AutoHashMapUnmanaged(Oid, IndexEntry){};
+@@ -1136,7 +1136,7 @@
+ /// format).
+ fn indexPackFirstPass(
+     allocator: Allocator,
+-    pack: std.fs.File,
++    pack: anytype,
+     index_entries: *std.AutoHashMapUnmanaged(Oid, IndexEntry),
+     pending_deltas: *std.ArrayListUnmanaged(IndexEntry),
+ ) ![Sha1.digest_length]u8 {
+@@ -1205,7 +1205,7 @@
+ /// delta and we do not yet know the offset of the base object).
+ fn indexPackHashDelta(
+     allocator: Allocator,
+-    pack: std.fs.File,
++    pack: anytype,
+     delta: IndexEntry,
+     index_entries: std.AutoHashMapUnmanaged(Oid, IndexEntry),
+     cache: *ObjectCache,
+@@ -1254,7 +1254,7 @@
+ /// to obtain the final object.
+ fn resolveDeltaChain(
+     allocator: Allocator,
+-    pack: std.fs.File,
++    pack: anytype,
+     base_object: Object,
+     delta_offsets: []const u64,
+     cache: *ObjectCache,

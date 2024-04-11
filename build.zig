@@ -45,6 +45,21 @@ pub fn build(b: *std.Build) !void {
         for (markdown_parse.libExes()) |lib_exe| {
             lib_exe.root_module.addImport("markdown", markdown);
         }
+
+        const patch_git_zig = b.addSystemCommand(&.{ "patch", "-u" });
+        patch_git_zig.addFileArg(.{
+            .cwd_relative = b.pathJoin(&.{ zig_src_dir, "src/Package/Fetch/git.zig" }),
+        });
+        patch_git_zig.addFileArg(.{ .path = "fuzzers/git.patch" });
+        patch_git_zig.addArg("-o");
+        const patched_git_zig = patch_git_zig.addOutputFileArg("git.zig");
+        const git = b.createModule(.{
+            .root_source_file = patched_git_zig,
+        });
+        const git_unpack = try addFuzzer(b, "git", &.{});
+        for (git_unpack.libExes()) |lib_exe| {
+            lib_exe.root_module.addImport("git", git);
+        }
     }
 
     // tools
