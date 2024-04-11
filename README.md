@@ -20,6 +20,9 @@ Current fuzzers:
 - `tar` which uses `std.tar.iterator` to simulate an untar operation (but does not write to the filesystem)
 - `tar-fs` which calls `std.tar.pipeToFileSystem` (and actually writes to the filesystem)
 
+Non-`std` fuzzers (requires `-Dzig-src=/path/to/zig/sources`):
+- `markdown` which calls Autodoc's `markdown.Parser` to parse an input line by line
+
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 
 ## Building a fuzzer
