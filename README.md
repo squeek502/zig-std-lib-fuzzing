@@ -20,6 +20,17 @@ Current fuzzers:
 - `tar` which uses `std.tar.iterator` to simulate an untar operation (but does not write to the filesystem)
 - `tar-fs` which calls `std.tar.pipeToFileSystem` (and actually writes to the filesystem)
 
+Non-`std` fuzzers (requires `-Dzig-src=/path/to/zig/sources`):
+- `markdown` which calls Autodoc's `markdown.Parser` to parse an input line by line
+- `git` which calls `git.indexPack` on a Git packfile
+  - Requires a patch (`fuzzers/git.patch`) to be applied to upstream `git.zig` so I/O can be avoided.
+  - To verify the contents of the input packfile (`small.pack`):
+
+    1. Create a new empty Git repository (`git init`)
+    2. `git unpack-objects <path/to/small.pack`
+    3. `git fsck` -> note the "dangling commit" ID (which matches the commit checked out below)
+    4. `git checkout 0a9b7c28d992347b3e237bb143c052b177ad388f`
+
 Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
 
 ## Building a fuzzer
