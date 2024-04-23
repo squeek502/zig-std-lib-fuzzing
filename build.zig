@@ -10,6 +10,7 @@ pub fn build(b: *std.Build) !void {
     _ = try addFuzzer(b, "zstandard", &.{});
     _ = try addFuzzer(b, "tar", &.{});
     _ = try addFuzzer(b, "tar-fs", &.{});
+    _ = try addFuzzer(b, "zip-fs", &.{});
 
     const deflate_puff = try addFuzzer(b, "deflate-puff", &.{});
     for (deflate_puff.libExes()) |lib_exe| {

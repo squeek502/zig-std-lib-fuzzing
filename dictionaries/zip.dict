@@ -1,0 +1,5 @@
+central_file_header_sig="PK\x01\x02"
+local_file_header_sig="PK\x03\x04"
+end_of_central_directory_sig="PK\x05\x06"
+zip64_end_of_central_directory_record_sig="PK\x06\x06"
+zip64_end_of_central_directory_locator_sig="PK\x06\x07"
