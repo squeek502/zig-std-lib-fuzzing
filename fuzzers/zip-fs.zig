@@ -42,12 +42,7 @@ pub fn main() !void {
     };
     defer tmpdir.close();
 
-    var file = try tmpdir.createFile("fuzz.zip", .{ .read = true });
-    defer file.close();
-    try file.writeAll(data);
+    var fbs = std.io.fixedBufferStream(data);
 
-    var outdir = try tmpdir.makeOpenPath("out", .{});
-    defer outdir.close();
-
-    std.zip.extract(outdir, file, .{}) catch {};
+    std.zip.extract(tmpdir, fbs.seekableStream(), .{}) catch {};
 }
