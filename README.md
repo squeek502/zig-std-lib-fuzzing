@@ -31,7 +31,7 @@ Non-`std` fuzzers (requires `-Dzig-src=/path/to/zig/sources`):
     3. `git fsck` -> note the "dangling commit" ID (which matches the commit checked out below)
     4. `git checkout 0a9b7c28d992347b3e237bb143c052b177ad388f`
 
-Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed.
+Requires [AFL++](https://github.com/AFLplusplus/AFLplusplus) with `afl-clang-lto` to be installed (see [Compiling AFL++](#compiling-afl)).
 
 ## Building a fuzzer
 
@@ -141,3 +141,17 @@ Requires the `decodecorpus` tool from [zstd](https://github.com/facebook/zstd/tr
 ```
 ./tools/zstandard-decodecorpus.sh /path/to/decodecorpus ./zig-out/bin/zstandard-verify
 ```
+
+## Compiling AFL++
+
+- Clone `https://github.com/AFLplusplus/AFLplusplus` (avoid recursively cloning, avoid initializing submodules--they are *huge* and unnecessary for our purposes)
+- Make sure `llvm-config --version` matches the same version that your Zig uses
+
+```
+cd AFLplusplus
+make source-only NO_NYX=1
+make install
+```
+
+(or `sudo make install` if needed)
+
