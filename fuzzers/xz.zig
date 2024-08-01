@@ -5,7 +5,7 @@ export fn cMain() void {
 }
 
 comptime {
-    @export(cMain, .{ .name = "main", .linkage = .Strong });
+    @export(cMain, .{ .name = "main", .linkage = .strong });
 }
 
 pub fn main() !void {

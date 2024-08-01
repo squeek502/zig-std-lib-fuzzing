@@ -5,7 +5,7 @@ export fn cMain() void {
 }
 
 comptime {
-    @export(cMain, .{ .name = "main", .linkage = .Strong });
+    @export(cMain, .{ .name = "main", .linkage = .strong });
 }
 
 var tmp_buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;

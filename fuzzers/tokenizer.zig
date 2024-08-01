@@ -5,7 +5,7 @@ fn cMain() callconv(.C) void {
 }
 
 comptime {
-    @export(cMain, .{ .name = "main", .linkage = .Strong });
+    @export(cMain, .{ .name = "main", .linkage = .strong });
 }
 
 pub fn main() !void {

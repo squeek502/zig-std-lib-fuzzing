@@ -13,8 +13,8 @@ pub fn build(b: *std.Build) !void {
 
     const deflate_puff = try addFuzzer(b, "deflate-puff", &.{});
     for (deflate_puff.libExes()) |lib_exe| {
-        lib_exe.addIncludePath(.{ .path = "lib/puff" });
-        lib_exe.addCSourceFile(.{ .file = .{ .path = "lib/puff/puff.c" }, .flags = &.{} });
+        lib_exe.addIncludePath(b.path("lib/puff"));
+        lib_exe.addCSourceFile(.{ .file = b.path("lib/puff/puff.c"), .flags = &.{} });
         lib_exe.linkLibC();
     }
 
@@ -25,17 +25,17 @@ pub fn build(b: *std.Build) !void {
 
     const xxhash = try addFuzzer(b, "xxhash", &.{});
     for (xxhash.libExes()) |lib_exe| {
-        lib_exe.addIncludePath(.{ .path = "lib/xxhash" });
-        lib_exe.addCSourceFile(.{ .file = .{ .path = "lib/xxhash/xxhash.c" }, .flags = &.{"-DXXH_NO_XXH3"} });
+        lib_exe.addIncludePath(b.path("lib/xxhash"));
+        lib_exe.addCSourceFile(.{ .file = b.path("lib/xxhash/xxhash.c"), .flags = &.{"-DXXH_NO_XXH3"} });
         lib_exe.linkLibC();
     }
 
     const zstandard_compare = try addFuzzer(b, "zstandard-compare", &.{});
-    addZstd(&zstandard_compare);
+    addZstd(b, &zstandard_compare);
     const zstandard_compare_alloc = try addFuzzer(b, "zstandard-compare-alloc", &.{});
-    addZstd(&zstandard_compare_alloc);
+    addZstd(b, &zstandard_compare_alloc);
     const zstandard_compare_stream = try addFuzzer(b, "zstandard-compare-stream", &.{});
-    addZstd(&zstandard_compare_stream);
+    addZstd(b, &zstandard_compare_stream);
 
     if (b.option([]const u8, "zig-src", "Zig source root")) |zig_src_dir| {
         const markdown = b.createModule(.{
@@ -50,7 +50,7 @@ pub fn build(b: *std.Build) !void {
         patch_git_zig.addFileArg(.{
             .cwd_relative = b.pathJoin(&.{ zig_src_dir, "src/Package/Fetch/git.zig" }),
         });
-        patch_git_zig.addFileArg(.{ .path = "fuzzers/git.patch" });
+        patch_git_zig.addFileArg(b.path("fuzzers/git.patch"));
         patch_git_zig.addArg("-o");
         const patched_git_zig = patch_git_zig.addOutputFileArg("git.zig");
         const git = b.createModule(.{
@@ -65,7 +65,7 @@ pub fn build(b: *std.Build) !void {
     // tools
     const sin_musl = b.addExecutable(.{
         .name = "sin-musl",
-        .root_source_file = .{ .path = "tools/sin-musl.zig" },
+        .root_source_file = b.path("tools/sin-musl.zig"),
         .target = b.resolveTargetQuery(.{ .abi = .musl }),
     });
     sin_musl.linkLibC();
@@ -73,7 +73,7 @@ pub fn build(b: *std.Build) !void {
 
     const zstandard_verify = b.addExecutable(.{
         .name = "zstandard-verify",
-        .root_source_file = .{ .path = "tools/zstandard-verify.zig" },
+        .root_source_file = b.path("tools/zstandard-verify.zig"),
         .target = b.resolveTargetQuery(.{}),
     });
     const install_zstandard_verify = b.addInstallArtifact(zstandard_verify, .{});
@@ -89,7 +89,7 @@ fn addFuzzer(b: *std.Build, comptime name: []const u8, afl_clang_args: []const [
     // The library
     const fuzz_lib = b.addStaticLibrary(.{
         .name = "fuzz-" ++ name ++ "-lib",
-        .root_source_file = .{ .path = "fuzzers/" ++ name ++ ".zig" },
+        .root_source_file = b.path("fuzzers/" ++ name ++ ".zig"),
         .target = target,
         .optimize = .Debug,
     });
@@ -100,17 +100,17 @@ fn addFuzzer(b: *std.Build, comptime name: []const u8, afl_clang_args: []const [
 
     // Setup the output name
     const fuzz_executable_name = "fuzz-" ++ name;
-    const fuzz_exe_path = try std.fs.path.join(b.allocator, &.{ b.cache_root.path.?, fuzz_executable_name });
 
     // We want `afl-clang-lto -o path/to/output path/to/library`
-    const fuzz_compile = b.addSystemCommand(&.{ "afl-clang-lto", "-o", fuzz_exe_path });
+    const fuzz_compile = b.addSystemCommand(&.{ "afl-clang-lto", "-o" });
+    const fuzz_exe_path = fuzz_compile.addOutputFileArg(name);
     // Add the path to the library file to afl-clang-lto's args
     fuzz_compile.addArtifactArg(fuzz_lib);
     // Custom args
     fuzz_compile.addArgs(afl_clang_args);
 
     // Install the cached output to the install 'bin' path
-    const fuzz_install = b.addInstallBinFile(.{ .path = fuzz_exe_path }, fuzz_executable_name);
+    const fuzz_install = b.addInstallBinFile(fuzz_exe_path, fuzz_executable_name);
     fuzz_install.step.dependOn(&fuzz_compile.step);
 
     // Add a top-level step that compiles and installs the fuzz executable
@@ -121,7 +121,7 @@ fn addFuzzer(b: *std.Build, comptime name: []const u8, afl_clang_args: []const [
     // Compile a companion exe for debugging crashes
     const fuzz_debug_exe = b.addExecutable(.{
         .name = "fuzz-" ++ name ++ "-debug",
-        .root_source_file = .{ .path = "fuzzers/" ++ name ++ ".zig" },
+        .root_source_file = b.path("fuzzers/" ++ name ++ ".zig"),
         .target = target,
         .optimize = .Debug,
     });
@@ -145,9 +145,9 @@ const FuzzerSteps = struct {
     }
 };
 
-fn addZstd(fuzzer_steps: *const FuzzerSteps) void {
+fn addZstd(b: *std.Build, fuzzer_steps: *const FuzzerSteps) void {
     for (fuzzer_steps.libExes()) |lib_exe| {
-        lib_exe.addIncludePath(.{ .path = "lib/zstd/lib" });
+        lib_exe.addIncludePath(b.path("lib/zstd/lib"));
         lib_exe.addCSourceFiles(
             .{
                 .files = &.{
