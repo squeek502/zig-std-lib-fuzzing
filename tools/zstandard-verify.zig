@@ -26,38 +26,22 @@ pub fn main() !void {
     };
     defer allocator.free(uncompressed);
 
-    // decompressStream
-    {
-        var in_stream = std.io.fixedBufferStream(input);
-        var stream = std.compress.zstd.decompressStream(allocator, in_stream.reader());
-        defer stream.deinit();
-        const result = try stream.reader().readAllAlloc(allocator, std.math.maxInt(usize));
-        defer allocator.free(result);
-
-        try std.testing.expectEqualSlices(u8, uncompressed, result);
-    }
-
-    // decodeAlloc
-    decodeAlloc: {
-        const result = std.compress.zstd.decompress.decodeAlloc(allocator, input, true, 8 * (1 << 20)) catch |err| switch (err) {
-            error.DictionaryIdFlagUnsupported => break :decodeAlloc,
-            else => return err,
-        };
-        defer allocator.free(result);
-
-        try std.testing.expectEqualSlices(u8, uncompressed, result);
-    }
-
     // decode
     decode: {
-        var buf = try allocator.alloc(u8, uncompressed.len);
-        defer allocator.free(buf);
-        const result_len = std.compress.zstd.decompress.decode(buf, input, true) catch |err| switch (err) {
-            error.UnknownContentSizeUnsupported => break :decode,
-            error.DictionaryIdFlagUnsupported => break :decode,
-            else => return err,
+        var out: std.ArrayListUnmanaged(u8) = .empty;
+        defer out.deinit(allocator);
+        try out.ensureUnusedCapacity(allocator, std.compress.zstd.default_window_len);
+
+        var in: std.io.Reader = .fixed(input);
+        var zstd_stream: std.compress.zstd.Decompress = .init(&in, &.{}, .{});
+        zstd_stream.reader.appendRemaining(allocator, null, &out, .unlimited) catch |err| {
+            if (zstd_stream.err) |zstd_err| switch (zstd_err) {
+                error.DictionaryIdFlagUnsupported => break :decode,
+                else => {},
+            };
+            return zstd_stream.err orelse err;
         };
 
-        try std.testing.expectEqualSlices(u8, uncompressed, buf[0..result_len]);
+        try std.testing.expectEqualSlices(u8, uncompressed, out.items);
     }
 }

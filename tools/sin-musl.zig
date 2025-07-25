@@ -7,7 +7,8 @@ const c = @cImport(@cInclude("math.h"));
 pub fn main() !void {
     // Read the data from stdin, only up to bytes needed for f64
     var buf align(@alignOf(f64)) = [_]u8{0} ** @sizeOf(f64);
-    const stdin = std.io.getStdIn();
+
+    const stdin: std.fs.File = .stdin();
     _ = try stdin.read(buf[0..]);
 
     // f32

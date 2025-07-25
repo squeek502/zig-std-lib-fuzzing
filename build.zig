@@ -65,16 +65,20 @@ pub fn build(b: *std.Build) !void {
     // tools
     const sin_musl = b.addExecutable(.{
         .name = "sin-musl",
-        .root_source_file = b.path("tools/sin-musl.zig"),
-        .target = b.resolveTargetQuery(.{ .abi = .musl }),
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tools/sin-musl.zig"),
+            .target = b.resolveTargetQuery(.{ .abi = .musl }),
+        }),
     });
     sin_musl.linkLibC();
     const install_sin_musl = b.addInstallArtifact(sin_musl, .{});
 
     const zstandard_verify = b.addExecutable(.{
         .name = "zstandard-verify",
-        .root_source_file = b.path("tools/zstandard-verify.zig"),
-        .target = b.resolveTargetQuery(.{}),
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tools/zstandard-verify.zig"),
+            .target = b.resolveTargetQuery(.{}),
+        }),
     });
     const install_zstandard_verify = b.addInstallArtifact(zstandard_verify, .{});
 
@@ -86,17 +90,23 @@ pub fn build(b: *std.Build) !void {
 fn addFuzzer(b: *std.Build, comptime name: []const u8, afl_clang_args: []const []const u8) !FuzzerSteps {
     const target = b.resolveTargetQuery(.{});
 
-    // The library
-    const fuzz_lib = b.addStaticLibrary(.{
-        .name = "fuzz-" ++ name ++ "-lib",
+    const fuzz_mod = b.createModule(.{
         .root_source_file = b.path("fuzzers/" ++ name ++ ".zig"),
         .target = target,
         .optimize = .Debug,
+    });
+
+    // The library
+    const fuzz_lib = b.addLibrary(.{
+        .name = "fuzz-" ++ name ++ "-lib",
+        .root_module = fuzz_mod,
     });
     fuzz_lib.want_lto = true;
     fuzz_lib.bundle_compiler_rt = true;
     // Seems to be necessary for LLVM >= 15
     fuzz_lib.root_module.pic = true;
+    fuzz_lib.use_llvm = true;
+    fuzz_lib.use_lld = true;
 
     // Setup the output name
     const fuzz_executable_name = "fuzz-" ++ name;
@@ -121,9 +131,7 @@ fn addFuzzer(b: *std.Build, comptime name: []const u8, afl_clang_args: []const [
     // Compile a companion exe for debugging crashes
     const fuzz_debug_exe = b.addExecutable(.{
         .name = "fuzz-" ++ name ++ "-debug",
-        .root_source_file = b.path("fuzzers/" ++ name ++ ".zig"),
-        .target = target,
-        .optimize = .Debug,
+        .root_module = fuzz_mod,
     });
 
     // Only install fuzz-debug when the fuzz step is run
