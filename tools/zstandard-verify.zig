@@ -28,13 +28,15 @@ pub fn main() !void {
 
     // decode
     decode: {
-        var out: std.ArrayListUnmanaged(u8) = .empty;
-        defer out.deinit(allocator);
-        try out.ensureUnusedCapacity(allocator, std.compress.zstd.default_window_len);
+        var out: std.io.Writer.Allocating = .init(allocator);
+        defer out.deinit();
+        try out.ensureUnusedCapacity(std.compress.zstd.default_window_len);
 
         var in: std.io.Reader = .fixed(input);
-        var zstd_stream: std.compress.zstd.Decompress = .init(&in, &.{}, .{});
-        zstd_stream.reader.appendRemaining(allocator, null, &out, .unlimited) catch |err| {
+        var zstd_stream: std.compress.zstd.Decompress = .init(&in, &.{}, .{
+            .window_len = std.compress.zstd.default_window_len,
+        });
+        _ = zstd_stream.reader.streamRemaining(&out.writer) catch |err| {
             if (zstd_stream.err) |zstd_err| switch (zstd_err) {
                 error.DictionaryIdFlagUnsupported => break :decode,
                 else => {},
@@ -42,6 +44,6 @@ pub fn main() !void {
             return zstd_stream.err orelse err;
         };
 
-        try std.testing.expectEqualSlices(u8, uncompressed, out.items);
+        try std.testing.expectEqualSlices(u8, uncompressed, out.getWritten());
     }
 }
