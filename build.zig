@@ -138,6 +138,10 @@ fn addFuzzer(b: *std.Build, comptime name: []const u8, afl_clang_args: []const [
     const install_fuzz_debug_exe = b.addInstallArtifact(fuzz_debug_exe, .{});
     fuzz_compile_run.dependOn(&install_fuzz_debug_exe.step);
 
+    // Add a top-level step that compiles and installs only the debug executable
+    const fuzz_debug_compile_run = b.step("fuzz-" ++ name ++ "-debug", "Build executable for debugging '" ++ name ++ "'");
+    fuzz_debug_compile_run.dependOn(&install_fuzz_debug_exe.step);
+
     return FuzzerSteps{
         .lib = fuzz_lib,
         .debug_exe = fuzz_debug_exe,
