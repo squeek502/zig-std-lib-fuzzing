@@ -1,14 +1,10 @@
 const std = @import("std");
 
-export fn cMain() void {
-    main() catch unreachable;
+pub export fn main() void {
+    zigMain() catch unreachable;
 }
 
-comptime {
-    @export(cMain, .{ .name = "main", .linkage = .strong });
-}
-
-pub fn main() !void {
+pub fn zigMain() !void {
     // Setup an allocator that will detect leaks/use-after-free/etc
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     // this will check for leaks and crash the program if it finds any
@@ -16,17 +12,20 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     // Read the data from stdin
-    const stdin = std.io.getStdIn();
+    const stdin = std.fs.File.stdin();
     const data = try stdin.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(data);
 
     // Try to parse the data
-    var fbs = std.io.fixedBufferStream(data);
-    const reader = fbs.reader();
-    var inflate = std.compress.flate.decompressor(reader);
+    var fixed_reader: std.Io.Reader = .fixed(data);
+    var decompress = std.compress.flate.Decompress.init(&fixed_reader, .raw, &.{});
 
-    const inflated = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch {
+    var aw: std.Io.Writer.Allocating = .init(allocator);
+    try aw.ensureUnusedCapacity(std.compress.flate.history_len);
+    defer aw.deinit();
+
+    const decompressed_len = decompress.reader.streamRemaining(&aw.writer) catch {
         return;
     };
-    defer allocator.free(inflated);
+    _ = decompressed_len;
 }
