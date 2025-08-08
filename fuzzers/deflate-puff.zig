@@ -45,14 +45,12 @@ fn translatePuffError(code: c_int) anyerror {
 }
 
 pub fn zigMain() !void {
-    // Setup an allocator that will detect leaks/use-after-free/etc
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    // this will check for leaks and crash the program if it finds any
     defer std.debug.assert(gpa.deinit() == .ok);
     const allocator = gpa.allocator();
 
     // Read the data from stdin
-    const stdin = std.io.getStdIn();
+    const stdin = std.fs.File.stdin();
     const data = try stdin.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(data);
 
@@ -66,17 +64,21 @@ pub fn zigMain() !void {
         allocator.free(inflated_puff.?);
     };
 
-    var fbs = std.io.fixedBufferStream(data);
-    const reader = fbs.reader();
-    var inflate = std.compress.flate.decompressor(reader);
-
     var zig_error: anyerror = error.NoError;
-    const inflated: ?[]u8 = inflate.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch |err| blk: {
-        zig_error = err;
-        break :blk null;
-    };
-    defer if (inflated != null) {
-        allocator.free(inflated.?);
+
+    var fixed_reader: std.Io.Reader = .fixed(data);
+    var decompress = std.compress.flate.Decompress.init(&fixed_reader, .raw, &.{});
+
+    var aw: std.Io.Writer.Allocating = .init(allocator);
+    try aw.ensureUnusedCapacity(std.compress.flate.max_window_len);
+    defer aw.deinit();
+
+    const inflated: ?[]u8 = blk: {
+        _ = decompress.reader.streamRemaining(&aw.writer) catch |err| {
+            zig_error = err;
+            break :blk null;
+        };
+        break :blk aw.getWritten();
     };
 
     if (inflated_puff == null or inflated == null) {
