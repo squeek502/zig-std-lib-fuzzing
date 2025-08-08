@@ -14,7 +14,8 @@ pub fn build(b: *std.Build) !void {
     const deflate_puff = try addFuzzer(b, "deflate-puff", &.{});
     for (deflate_puff.libExes()) |lib_exe| {
         lib_exe.addIncludePath(b.path("lib/puff"));
-        lib_exe.addCSourceFile(.{ .file = b.path("lib/puff/puff.c"), .flags = &.{} });
+        // -fno-sanitize=undefined is just to avoid linker errors that I don't want to figure out right now
+        lib_exe.addCSourceFile(.{ .file = b.path("lib/puff/puff.c"), .flags = &.{"-fno-sanitize=undefined"} });
         lib_exe.linkLibC();
     }
 
@@ -90,16 +91,14 @@ pub fn build(b: *std.Build) !void {
 fn addFuzzer(b: *std.Build, comptime name: []const u8, afl_clang_args: []const []const u8) !FuzzerSteps {
     const target = b.resolveTargetQuery(.{});
 
-    const fuzz_mod = b.createModule(.{
-        .root_source_file = b.path("fuzzers/" ++ name ++ ".zig"),
-        .target = target,
-        .optimize = .Debug,
-    });
-
     // The library
     const fuzz_lib = b.addLibrary(.{
         .name = "fuzz-" ++ name ++ "-lib",
-        .root_module = fuzz_mod,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("fuzzers/" ++ name ++ ".zig"),
+            .target = target,
+            .optimize = .Debug,
+        }),
     });
     fuzz_lib.want_lto = true;
     fuzz_lib.bundle_compiler_rt = true;
@@ -131,7 +130,11 @@ fn addFuzzer(b: *std.Build, comptime name: []const u8, afl_clang_args: []const [
     // Compile a companion exe for debugging crashes
     const fuzz_debug_exe = b.addExecutable(.{
         .name = "fuzz-" ++ name ++ "-debug",
-        .root_module = fuzz_mod,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("fuzzers/" ++ name ++ ".zig"),
+            .target = target,
+            .optimize = .Debug,
+        }),
     });
 
     // Only install fuzz-debug when the fuzz step is run
