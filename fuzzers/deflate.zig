@@ -19,6 +19,7 @@ pub fn zigMain() !void {
     var decompress = std.compress.flate.Decompress.init(&fixed_reader, .raw, &.{});
 
     var aw: std.Io.Writer.Allocating = .init(allocator);
+    aw.minimum_unused_capacity = std.compress.flate.history_len;
     try aw.ensureUnusedCapacity(std.compress.flate.max_window_len);
     defer aw.deinit();
 
