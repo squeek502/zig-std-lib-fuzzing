@@ -1,14 +1,10 @@
 const std = @import("std");
 
-export fn cMain() void {
-    main() catch unreachable;
+pub export fn main() void {
+    zigMain() catch unreachable;
 }
 
-comptime {
-    @export(cMain, .{ .name = "main", .linkage = .strong });
-}
-
-pub fn main() !void {
+pub fn zigMain() !void {
     // Setup an allocator that will detect leaks/use-after-free/etc
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     // this will check for leaks and crash the program if it finds any
@@ -16,31 +12,22 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     // Read the data from stdin
-    const stdin = std.io.getStdIn();
+    const stdin = std.fs.File.stdin();
     const data = try stdin.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(data);
 
-    // decompressStream
-    decompressStream: {
-        var in_stream = std.io.fixedBufferStream(data);
-        var stream = std.compress.zstd.decompressStream(allocator, in_stream.reader());
-        defer stream.deinit();
-        const result = stream.reader().readAllAlloc(allocator, std.math.maxInt(usize)) catch break :decompressStream;
-        defer allocator.free(result);
-    }
+    var out: std.io.Writer.Allocating = .init(allocator);
+    defer out.deinit();
+    try out.ensureUnusedCapacity(std.compress.zstd.default_window_len + std.compress.zstd.block_size_max);
 
-    // decodeAlloc
-    decodeAlloc: {
-        const result = std.compress.zstd.decompress.decodeAlloc(allocator, data, false, 1 << 23) catch break :decodeAlloc;
-        defer allocator.free(result);
-    }
-
-    // decode
-    decode: {
-        // Assume the uncompressed size is less than or equal to the compressed size.
-        // The uncompressed data might not always fit, but that's fine for the purposes of this fuzzer
-        const buf = try allocator.alloc(u8, data.len);
-        defer allocator.free(buf);
-        _ = std.compress.zstd.decompress.decode(buf, data, false) catch break :decode;
-    }
+    var in: std.io.Reader = .fixed(data);
+    var zstd_stream: std.compress.zstd.Decompress = .init(&in, &.{}, .{
+        .window_len = std.compress.zstd.default_window_len,
+    });
+    _ = zstd_stream.reader.streamRemaining(&out.writer) catch {
+        if (zstd_stream.err) |zstd_err| switch (zstd_err) {
+            error.DictionaryIdFlagUnsupported => return,
+            else => {},
+        };
+    };
 }

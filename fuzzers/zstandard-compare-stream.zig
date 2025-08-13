@@ -41,13 +41,19 @@ fn cZstdStreaming(allocator: Allocator, input: []const u8) ![]u8 {
 }
 
 fn zigZstdStreaming(allocator: Allocator, input: []const u8) ![]u8 {
-    var in_stream = std.io.fixedBufferStream(input);
-    var stream = std.compress.zstd.decompressStream(allocator, in_stream.reader());
-    defer stream.deinit();
-    const result = try stream.reader().readAllAlloc(allocator, std.math.maxInt(usize));
-    errdefer allocator.free(result);
+    var out: std.io.Writer.Allocating = .init(allocator);
+    errdefer out.deinit();
+    try out.ensureUnusedCapacity(std.compress.zstd.default_window_len + std.compress.zstd.block_size_max);
 
-    return result;
+    var in: std.io.Reader = .fixed(input);
+    var zstd_stream: std.compress.zstd.Decompress = .init(&in, &.{}, .{
+        .window_len = std.compress.zstd.default_window_len,
+    });
+    _ = zstd_stream.reader.streamRemaining(&out.writer) catch |err| {
+        return zstd_stream.err orelse err;
+    };
+
+    return out.toOwnedSlice();
 }
 
 pub fn zigMain() !void {
@@ -58,7 +64,7 @@ pub fn zigMain() !void {
     const allocator = gpa.allocator();
 
     // Read the data from stdin
-    const stdin = std.io.getStdIn();
+    const stdin = std.fs.File.stdin();
     const data = try stdin.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(data);
 
@@ -75,9 +81,7 @@ pub fn zigMain() !void {
         switch (err) {
             // Ignore this error since it's an intentional difference from the zstd C implementation
             error.DictionaryIdFlagUnsupported => return,
-            error.MalformedFrame, error.MalformedBlock, error.OutOfMemory, error.ChecksumFailure => {},
-            // Only possible when max_size is exceeded during Reader.readAllAlloc, which we set as maxInt(usize)
-            error.StreamTooLong => unreachable,
+            else => {},
         }
 
         actual_error = err;
