@@ -18,12 +18,9 @@ pub fn zigMain() !void {
 
     var out: std.io.Writer.Allocating = .init(allocator);
     defer out.deinit();
-    try out.ensureUnusedCapacity(std.compress.zstd.default_window_len + std.compress.zstd.block_size_max);
 
     var in: std.io.Reader = .fixed(data);
-    var zstd_stream: std.compress.zstd.Decompress = .init(&in, &.{}, .{
-        .window_len = std.compress.zstd.default_window_len,
-    });
+    var zstd_stream: std.compress.zstd.Decompress = .init(&in, &.{}, .{});
     _ = zstd_stream.reader.streamRemaining(&out.writer) catch {
         if (zstd_stream.err) |zstd_err| switch (zstd_err) {
             error.DictionaryIdFlagUnsupported => return,
