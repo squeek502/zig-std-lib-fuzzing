@@ -29,6 +29,9 @@ fn cZstdStreaming(allocator: Allocator, input: []const u8) ![]u8 {
             if (std.mem.eql(u8, err_name, "Restored data doesn't match checksum")) {
                 return error.BadChecksum;
             }
+            if (std.mem.eql(u8, err_name, "Data corruption detected")) {
+                return error.DataCorruption;
+            }
             return error.DecompressError;
         }
         try result.appendSlice(allocator, buf_out[0..out_buffer.pos]);
@@ -72,7 +75,7 @@ pub fn zigMain() !void {
     var expected_error: anyerror = error.NoError;
     const expected_bytes: ?[]u8 = cZstdStreaming(allocator, data) catch |err| blk: {
         // The Zig implementation doesn't support checksum validation currently
-        if (err == error.BadChecksum) return;
+        if (err == error.BadChecksum or err == error.DataCorruption) return;
 
         expected_error = err;
         break :blk null;
