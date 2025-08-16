@@ -70,8 +70,6 @@ pub fn zigMain() !void {
     var decompress = std.compress.flate.Decompress.init(&fixed_reader, .raw, &.{});
 
     var aw: std.Io.Writer.Allocating = .init(allocator);
-    aw.minimum_unused_capacity = std.compress.flate.history_len;
-    try aw.ensureUnusedCapacity(std.compress.flate.max_window_len);
     defer aw.deinit();
 
     const inflated: ?[]u8 = blk: {
@@ -79,7 +77,7 @@ pub fn zigMain() !void {
             zig_error = err;
             break :blk null;
         };
-        break :blk aw.getWritten();
+        break :blk aw.written();
     };
 
     if (inflated_puff == null or inflated == null) {
